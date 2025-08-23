@@ -43,17 +43,22 @@ interface User {
 interface PremiumPageProps {
     wallpapers: {
         data: Wallpaper[];
-        links: any[];
-        meta: any;
+        links: { url: string; label: string; active: boolean }[];
+        meta: {
+            current_page: number;
+            last_page: number;
+            per_page: number;
+            total: number;
+        };
     };
     categories: Category[];
     user?: User;
 }
 
 export default function Premium() {
-    const { auth, wallpapers, categories, user } = usePage<SharedData & PremiumPageProps>().props;
+    const { wallpapers, user } = usePage<SharedData & PremiumPageProps>().props;
     const [selectedWallpaper, setSelectedWallpaper] = useState<Wallpaper | null>(null);
-    const [selectedCategory, setSelectedCategory] = useState<string>('all');
+    const [selectedCategory] = useState<string>('all');
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [viewMode, setViewMode] = useState<'grid' | 'masonry'>('grid');
 

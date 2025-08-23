@@ -15,7 +15,7 @@ export default function Hero() {
             setCurrentImageIndex((prev) => (prev + 1) % backgroundImages.length);
         }, 5000);
         return () => clearInterval(interval);
-    }, []);
+    }, [backgroundImages.length]);
 
     return (
         <section className="relative h-[80vh] overflow-hidden">

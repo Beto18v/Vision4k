@@ -30,16 +30,21 @@ interface Category {
 interface TrendingPageProps {
     wallpapers: {
         data: Wallpaper[];
-        links: any[];
-        meta: any;
+        links: { url: string; label: string; active: boolean }[];
+        meta: {
+            current_page: number;
+            last_page: number;
+            per_page: number;
+            total: number;
+        };
     };
     categories: Category[];
 }
 
 export default function Trending() {
-    const { auth, wallpapers, categories } = usePage<SharedData & TrendingPageProps>().props;
+    const { wallpapers } = usePage<SharedData & TrendingPageProps>().props;
     const [selectedWallpaper, setSelectedWallpaper] = useState<Wallpaper | null>(null);
-    const [selectedCategory, setSelectedCategory] = useState<string>('all');
+    const [selectedCategory] = useState<string>('all');
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [viewMode, setViewMode] = useState<'grid' | 'masonry'>('grid');
     const [sortBy, setSortBy] = useState<'newest' | 'popular' | 'name'>('popular');
@@ -77,7 +82,7 @@ export default function Trending() {
                     <div className="absolute top-60 right-40 h-80 w-80 animate-pulse rounded-full bg-blue-600/10 blur-3xl delay-2000"></div>
                 </div>
 
-                <Header currentPage="trending" user={auth.user} />
+                <Header currentPage="trending" />
 
                 {/* Hero Section */}
                 <div className="relative py-24">
@@ -164,7 +169,7 @@ export default function Trending() {
                             {/* Sort */}
                             <select
                                 value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value as any)}
+                                onChange={(e) => setSortBy(e.target.value as 'newest' | 'popular' | 'name')}
                                 className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-white backdrop-blur-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
                             >
                                 <option value="popular" className="bg-gray-800">

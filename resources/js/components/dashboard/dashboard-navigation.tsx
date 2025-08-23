@@ -3,7 +3,7 @@ import { BarChart3, FolderOpen, Image, Upload } from 'lucide-react';
 interface NavigationTab {
     key: 'overview' | 'wallpapers' | 'upload' | 'categories' | 'analytics';
     label: string;
-    icon: any;
+    icon: React.ElementType;
 }
 
 interface DashboardNavigationProps {

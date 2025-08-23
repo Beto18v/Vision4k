@@ -5,7 +5,7 @@ import { FormEventHandler, useState } from 'react';
 import InputError from '@/components/input-error';
 
 export default function ConfirmPassword() {
-    const [showPassword, setShowPassword] = useState(false);
+    const [showPassword] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm<Required<{ password: string }>>({
         password: '',
     });

@@ -9,7 +9,7 @@ interface FlashMessage {
 }
 
 export default function FlashMessages() {
-    const { flash } = usePage().props as any;
+    const { flash } = usePage<{ flash: string }>().props;
     const [messages, setMessages] = useState<FlashMessage>({});
     const [isVisible, setIsVisible] = useState(false);
 

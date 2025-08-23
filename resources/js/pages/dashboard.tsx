@@ -40,12 +40,11 @@ interface DashboardProps {
 export default function Dashboard({ auth, wallpapers = [], categories = [], stats }: DashboardProps) {
     const [activeTab, setActiveTab] = useState<'overview' | 'wallpapers' | 'upload' | 'categories' | 'analytics'>('overview');
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedWallpaper, setSelectedWallpaper] = useState<number | null>(null);
     const [uploadFiles, setUploadFiles] = useState<FileList | null>(null);
     const [dragActive, setDragActive] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, errors } = useForm({
         title: '',
         description: '',
         category_id: '',

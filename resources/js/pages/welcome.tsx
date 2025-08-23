@@ -5,8 +5,7 @@ import Hero from '@/components/hero';
 import SearchBar from '@/components/search-bar';
 import ViewModeToggle from '@/components/view-mode-toggle';
 import WallpaperModal from '@/components/wallpaper-modal';
-import { type SharedData } from '@/types';
-import { Head, usePage } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 
 // Definimos la estructura de un Wallpaper
@@ -34,13 +33,13 @@ interface WelcomeProps {
 }
 
 export default function Welcome({ wallpapers, categories }: WelcomeProps) {
-    const { auth } = usePage<SharedData>().props;
+    // const { auth } = usePage<SharedData>().props;
     const [selectedWallpaper, setSelectedWallpaper] = useState<Wallpaper | null>(null);
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [viewMode, setViewMode] = useState<'grid' | 'masonry'>('grid');
     const [sortBy, setSortBy] = useState<'newest' | 'popular' | 'name'>('newest');
-    const [isLoading, setIsLoading] = useState(false);
+    // const [isLoading, setIsLoading] = useState(false);
 
     // Filtrar wallpapers basado en categoría y búsqueda
     const filteredWallpapers = wallpapers.filter((wallpaper) => {
@@ -186,7 +185,6 @@ export default function Welcome({ wallpapers, categories }: WelcomeProps) {
                     <div className="mb-6 flex flex-col justify-between sm:flex-row sm:items-center">
                         <div className="flex items-center space-x-4 text-gray-300">
                             <span className="text-sm">{filteredWallpapers.length} wallpapers encontrados</span>
-                            {isLoading && <div className="h-4 w-4 animate-spin rounded-full border-2 border-purple-500/30 border-t-purple-500"></div>}
                         </div>
                     </div>
 
