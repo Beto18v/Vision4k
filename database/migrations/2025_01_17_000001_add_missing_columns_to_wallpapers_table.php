@@ -14,12 +14,13 @@ return new class extends Migration
         Schema::table('wallpapers', function (Blueprint $table) {
             if (!Schema::hasColumn('wallpapers', 'views_count')) {
                 $table->integer('views_count')->default(0)->after('downloads_count');
-                $table->index('views_count');
             }
+            // Crear el índice solo si no existe
+            $table->index('views_count', 'wallpapers_views_count_index');
             if (!Schema::hasColumn('wallpapers', 'is_premium')) {
                 $table->boolean('is_premium')->default(false)->after('is_featured');
-                $table->index('is_premium');
             }
+            $table->index('is_premium', 'wallpapers_is_premium_index');
         });
     }
 
