@@ -2,9 +2,10 @@ import { Link } from '@inertiajs/react';
 
 interface DashboardHeaderProps {
     userName: string;
+    userRole: string;
 }
 
-export default function DashboardHeader({ userName }: DashboardHeaderProps) {
+export default function DashboardHeader({ userName, userRole }: DashboardHeaderProps) {
     return (
         <header className="sticky top-0 z-20 border-b border-white/10 bg-black/20 backdrop-blur-md">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -30,7 +31,7 @@ export default function DashboardHeader({ userName }: DashboardHeaderProps) {
                     <div className="flex items-center space-x-4">
                         <div className="hidden text-right md:block">
                             <div className="text-sm text-white">{userName}</div>
-                            <div className="text-xs text-gray-400">Administrador</div>
+                            <div className="text-xs text-gray-400">{userRole}</div>
                         </div>
                         <Link
                             href={route('logout')}

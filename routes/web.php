@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\WallpaperController;
 use App\Http\Controllers\WelcomeController;
 use Illuminate\Support\Facades\Route;
@@ -15,7 +17,18 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/dashboard/wallpapers/{wallpaper}', [DashboardController::class, 'update'])->name('dashboard.wallpapers.update');
     Route::delete('/dashboard/wallpapers/{wallpaper}', [DashboardController::class, 'destroy'])->name('dashboard.wallpapers.destroy');
     Route::post('/dashboard/categories', [DashboardController::class, 'storeCategory'])->name('dashboard.categories.store');
+    Route::get('/dashboard/categories-data', [DashboardController::class, 'getCategories'])->name('dashboard.categories.data');
     Route::get('/dashboard/analytics', [DashboardController::class, 'analytics'])->name('dashboard.analytics');
+
+    // Settings routes
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::put('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.profile.update');
+    Route::put('/settings/password', [SettingsController::class, 'updatePassword'])->name('settings.password.update');
+    Route::delete('/settings/account', [SettingsController::class, 'destroy'])->name('settings.account.destroy');
+
+    // Category management routes
+    Route::resource('categories', CategoryController::class);
+    Route::patch('/categories/{category}/toggle', [CategoryController::class, 'toggle'])->name('categories.toggle');
 });
 
 // Public wallpaper routes

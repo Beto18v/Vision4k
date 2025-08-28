@@ -1,5 +1,13 @@
 <?php
 
+/**
+ * Modelo User - Gestiona usuarios del sistema Vision4K
+ *
+ * Funcionalidades: autenticación, roles (admin/user), wallpapers, descargas, favoritos, premium
+ * Relaciones: wallpapers, downloads, favorites, roles
+ * Métodos clave: hasRole(), isAdmin(), assignRole(), getRoleDisplayName(), canDownload()
+ */
+
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -91,12 +99,66 @@ class User extends Authenticatable
     }
 
     /**
-     * Verificar si el usuario es premium activo
+     * Relación con Roles del usuario
      */
-    public function isPremiumActive(): bool
+    public function roles()
     {
-        return $this->is_premium &&
-            ($this->premium_expires_at === null || $this->premium_expires_at->isFuture());
+        return $this->belongsToMany(Role::class);
+    }
+
+    /**
+     * Verificar si el usuario tiene un rol específico
+     */
+    public function hasRole(string $roleSlug): bool
+    {
+        return $this->roles()->where('slug', $roleSlug)->exists();
+    }
+
+    /**
+     * Verificar si el usuario es usuario regular
+     */
+    public function isUser(): bool
+    {
+        return $this->hasRole('user');
+    }
+
+    /**
+     * Asignar un rol al usuario
+     */
+    public function assignRole(string $roleSlug): void
+    {
+        $role = Role::where('slug', $roleSlug)->first();
+        if ($role && !$this->hasRole($roleSlug)) {
+            $this->roles()->attach($role);
+        }
+    }
+
+    /**
+     * Remover un rol del usuario
+     */
+    public function removeRole(string $roleSlug): void
+    {
+        $role = Role::where('slug', $roleSlug)->first();
+        if ($role) {
+            $this->roles()->detach($role);
+        }
+    }
+
+    /**
+     * Obtener el rol principal del usuario (el primero asignado)
+     */
+    public function getMainRole()
+    {
+        return $this->roles()->first();
+    }
+
+    /**
+     * Obtener el nombre del rol para mostrar
+     */
+    public function getRoleDisplayName(): string
+    {
+        $role = $this->getMainRole();
+        return $role ? ucfirst($role->name) : 'Usuario';
     }
 
     /**
@@ -104,7 +166,7 @@ class User extends Authenticatable
      */
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->hasRole('admin');
     }
 
     /**

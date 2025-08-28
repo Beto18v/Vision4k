@@ -1,9 +1,19 @@
 <?php
 
+/**
+ * Controlador Wallpaper - Gestiona wallpapers en Vision4K
+ *
+ * Funcionalidades: CRUD de wallpapers, descargas, favoritos, búsqueda, filtrado
+ * Métodos: index(), create(), store(), show(), edit(), update(), destroy(), download()
+ * Características: manejo de archivos, thumbnails, estadísticas de descargas/vistas
+ */
+
 namespace App\Http\Controllers;
 
 use App\Models\Wallpaper;
 use App\Models\Category;
+use App\Models\Download;
+use App\Models\Favorite;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -48,227 +58,47 @@ class WallpaperController extends Controller
                 $query->orderBy('created_at', 'desc');
         }
 
-        $wallpapers = $query->paginate(24)->through(function ($wallpaper) {
-            return [
-                'id' => $wallpaper->id,
-                'title' => $wallpaper->title,
-                'description' => $wallpaper->description,
-                'url' => str_starts_with($wallpaper->file_path, 'http')
-                    ? $wallpaper->file_path
-                    : Storage::url($wallpaper->file_path),
-                'thumbnail' => $wallpaper->thumbnail_path
-                    ? (str_starts_with($wallpaper->thumbnail_path, 'http')
-                        ? $wallpaper->thumbnail_path
-                        : Storage::url($wallpaper->thumbnail_path))
-                    : (str_starts_with($wallpaper->file_path, 'http')
+        $wallpapers = $query->paginate(12)
+            ->through(function ($wallpaper) {
+                return [
+                    'id' => $wallpaper->id,
+                    'title' => $wallpaper->title,
+                    'description' => $wallpaper->description,
+                    'file_path' => str_starts_with($wallpaper->file_path, 'http')
                         ? $wallpaper->file_path
-                        : Storage::url($wallpaper->file_path)),
-                'category' => $wallpaper->category->name ?? 'General',
-                'tags' => $wallpaper->tags ? explode(',', trim($wallpaper->tags)) : [],
-                'downloads_count' => $wallpaper->downloads_count,
-                'views_count' => $wallpaper->views_count,
-                'is_premium' => $wallpaper->is_premium,
-                'is_featured' => $wallpaper->is_featured,
-                'created_at' => $wallpaper->created_at->format('Y-m-d'),
-                'user' => [
-                    'name' => $wallpaper->user->name ?? 'Anonymous',
-                ],
-            ];
-        });
+                        : Storage::url($wallpaper->file_path),
+                    'thumbnail_path' => $wallpaper->thumbnail_path
+                        ? Storage::url($wallpaper->thumbnail_path)
+                        : Storage::url($wallpaper->file_path),
+                    'category' => $wallpaper->category->name ?? 'Sin categoría',
+                    'tags' => $wallpaper->tags ? explode(',', trim($wallpaper->tags)) : [],
+                    'downloads_count' => $wallpaper->downloads_count,
+                    'views_count' => $wallpaper->views_count ?? 0,
+                    'is_featured' => $wallpaper->is_featured,
+                    'is_premium' => $wallpaper->is_premium,
+                    'created_at' => $wallpaper->created_at->format('Y-m-d'),
+                    'user' => $wallpaper->user ? [
+                        'name' => $wallpaper->user->name,
+                    ] : null,
+                ];
+            });
 
-        $categories = Category::where('is_active', true)->get();
+        // Obtener categorías para el filtro
+        $categories = Category::where('is_active', true)
+            ->withCount('wallpapers')
+            ->get()
+            ->map(function ($category) {
+                return [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'wallpapers_count' => $category->wallpapers_count,
+                ];
+            });
 
-        return Inertia::render('Wallpapers/Index', [
+        return Inertia::render('wallpapers/index', [
             'wallpapers' => $wallpapers,
             'categories' => $categories,
-            'filters' => [
-                'search' => $request->search,
-                'category' => $request->category,
-                'sort' => $request->sort,
-            ]
-        ]);
-    }
-
-    /**
-     * Display trending wallpapers.
-     */
-    public function trending(Request $request)
-    {
-        $days = $request->get('days', 7); // Por defecto últimos 7 días
-
-        $wallpapers = Wallpaper::with(['category', 'user'])
-            ->where('is_active', true)
-            ->where('created_at', '>=', now()->subDays($days))
-            ->orderByRaw('(downloads_count + views_count) DESC')
-            ->paginate(24)
-            ->through(function ($wallpaper) {
-                return [
-                    'id' => $wallpaper->id,
-                    'title' => $wallpaper->title,
-                    'description' => $wallpaper->description,
-                    'url' => Storage::url($wallpaper->file_path),
-                    'thumbnail' => Storage::url($wallpaper->thumbnail_path ?? $wallpaper->file_path),
-                    'category' => $wallpaper->category->name ?? 'General',
-                    'tags' => $wallpaper->tags ? explode(',', trim($wallpaper->tags)) : [],
-                    'downloads_count' => $wallpaper->downloads_count,
-                    'views_count' => $wallpaper->views_count,
-                    'is_premium' => $wallpaper->is_premium,
-                    'is_featured' => $wallpaper->is_featured,
-                    'created_at' => $wallpaper->created_at->format('Y-m-d'),
-                    'user' => [
-                        'name' => $wallpaper->user->name ?? 'Anonymous',
-                    ],
-                ];
-            });
-
-        return Inertia::render('Trending', [
-            'wallpapers' => $wallpapers,
-            'categories' => Category::where('is_active', true)->get(),
-            'days' => $days,
-        ]);
-    }
-
-    /**
-     * Display premium wallpapers.
-     */
-    public function premium(Request $request)
-    {
-        $wallpapers = Wallpaper::with(['category', 'user'])
-            ->where('is_active', true)
-            ->where('is_premium', true)
-            ->orderBy('created_at', 'desc')
-            ->paginate(24)
-            ->through(function ($wallpaper) {
-                return [
-                    'id' => $wallpaper->id,
-                    'title' => $wallpaper->title,
-                    'description' => $wallpaper->description,
-                    'url' => Storage::url($wallpaper->file_path),
-                    'thumbnail' => Storage::url($wallpaper->thumbnail_path ?? $wallpaper->file_path),
-                    'category' => $wallpaper->category->name ?? 'General',
-                    'tags' => $wallpaper->tags ? explode(',', trim($wallpaper->tags)) : [],
-                    'downloads_count' => $wallpaper->downloads_count,
-                    'views_count' => $wallpaper->views_count,
-                    'is_premium' => $wallpaper->is_premium,
-                    'is_featured' => $wallpaper->is_featured,
-                    'created_at' => $wallpaper->created_at->format('Y-m-d'),
-                    'user' => [
-                        'name' => $wallpaper->user->name ?? 'Anonymous',
-                    ],
-                ];
-            });
-
-        return Inertia::render('Premium', [
-            'wallpapers' => $wallpapers,
-            'categories' => Category::where('is_active', true)->get(),
-        ]);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Wallpaper $wallpaper)
-    {
-        $wallpaper->load(['category', 'user']);
-
-        // Incrementar vistas
-        $wallpaper->increment('views_count');
-
-        // Wallpapers relacionados
-        $relatedWallpapers = Wallpaper::where('category_id', $wallpaper->category_id)
-            ->where('id', '!=', $wallpaper->id)
-            ->where('is_active', true)
-            ->limit(6)
-            ->get()
-            ->map(function ($w) {
-                return [
-                    'id' => $w->id,
-                    'title' => $w->title,
-                    'url' => Storage::url($w->file_path),
-                    'thumbnail' => Storage::url($w->thumbnail_path ?? $w->file_path),
-                ];
-            });
-
-        return Inertia::render('Wallpapers/Show', [
-            'wallpaper' => [
-                'id' => $wallpaper->id,
-                'title' => $wallpaper->title,
-                'description' => $wallpaper->description,
-                'url' => Storage::url($wallpaper->file_path),
-                'thumbnail' => Storage::url($wallpaper->thumbnail_path ?? $wallpaper->file_path),
-                'category' => $wallpaper->category->name ?? 'General',
-                'tags' => $wallpaper->tags ? explode(',', trim($wallpaper->tags)) : [],
-                'downloads_count' => $wallpaper->downloads_count,
-                'views_count' => $wallpaper->views_count,
-                'is_premium' => $wallpaper->is_premium,
-                'is_featured' => $wallpaper->is_featured,
-                'file_size' => $wallpaper->file_size,
-                'resolution' => $wallpaper->resolution,
-                'created_at' => $wallpaper->created_at->format('Y-m-d'),
-                'user' => [
-                    'name' => $wallpaper->user->name ?? 'Anonymous',
-                ],
-            ],
-            'relatedWallpapers' => $relatedWallpapers,
-        ]);
-    }
-
-    /**
-     * Download wallpaper
-     */
-    public function download(Wallpaper $wallpaper)
-    {
-        if (!$wallpaper->is_active) {
-            abort(404);
-        }
-
-        // Incrementar contador de descargas
-        $wallpaper->increment('downloads_count');
-
-        // Registrar descarga si el usuario está autenticado
-        if (auth()->check()) {
-            $wallpaper->downloads()->create([
-                'user_id' => auth()->id(),
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-            ]);
-        }
-
-        $filename = $wallpaper->title . '_' . $wallpaper->resolution . '.' . pathinfo($wallpaper->file_path, PATHINFO_EXTENSION);
-
-        // Si es una URL externa, redirigir
-        if (str_starts_with($wallpaper->file_path, 'http')) {
-            return redirect($wallpaper->file_path);
-        }
-
-        // Si es un archivo local
-        $filePath = storage_path('app/public/' . $wallpaper->file_path);
-
-        if (!file_exists($filePath)) {
-            abort(404, 'File not found');
-        }
-
-        return response()->download($filePath, $filename);
-    }
-
-    /**
-     * Toggle favorite
-     */
-    public function toggleFavorite(Request $request, Wallpaper $wallpaper)
-    {
-        $user = $request->user();
-
-        if ($user->favorites()->where('wallpaper_id', $wallpaper->id)->exists()) {
-            $user->favorites()->detach($wallpaper->id);
-            $action = 'removed';
-        } else {
-            $user->favorites()->attach($wallpaper->id);
-            $action = 'added';
-        }
-
-        return response()->json([
-            'action' => $action,
-            'is_favorite' => $action === 'added',
+            'filters' => $request->only(['category', 'search', 'sort']),
         ]);
     }
 
@@ -286,6 +116,71 @@ class WallpaperController extends Controller
     public function store(Request $request)
     {
         //
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Wallpaper $wallpaper)
+    {
+        // Incrementar contador de vistas
+        $wallpaper->increment('views_count');
+
+        $wallpaper->load(['category', 'user']);
+
+        // Obtener wallpapers relacionados
+        $relatedWallpapers = Wallpaper::with('category')
+            ->where('category_id', $wallpaper->category_id)
+            ->where('id', '!=', $wallpaper->id)
+            ->where('is_active', true)
+            ->limit(6)
+            ->get()
+            ->map(function ($related) {
+                return [
+                    'id' => $related->id,
+                    'title' => $related->title,
+                    'file_path' => str_starts_with($related->file_path, 'http')
+                        ? $related->file_path
+                        : Storage::url($related->file_path),
+                    'thumbnail_path' => $related->thumbnail_path
+                        ? Storage::url($related->thumbnail_path)
+                        : Storage::url($related->file_path),
+                    'category' => $related->category->name ?? 'Sin categoría',
+                ];
+            });
+
+        return Inertia::render('wallpapers/show', [
+            'wallpaper' => [
+                'id' => $wallpaper->id,
+                'title' => $wallpaper->title,
+                'description' => $wallpaper->description,
+                'file_path' => str_starts_with($wallpaper->file_path, 'http')
+                    ? $wallpaper->file_path
+                    : Storage::url($wallpaper->file_path),
+                'thumbnail_path' => $wallpaper->thumbnail_path
+                    ? Storage::url($wallpaper->thumbnail_path)
+                    : Storage::url($wallpaper->file_path),
+                'category' => $wallpaper->category ? [
+                    'id' => $wallpaper->category->id,
+                    'name' => $wallpaper->category->name,
+                ] : null,
+                'tags' => $wallpaper->tags ? explode(',', trim($wallpaper->tags)) : [],
+                'downloads_count' => $wallpaper->downloads_count,
+                'views_count' => $wallpaper->views_count,
+                'is_featured' => $wallpaper->is_featured,
+                'is_premium' => $wallpaper->is_premium,
+                'file_size' => $wallpaper->file_size,
+                'resolution' => $wallpaper->resolution,
+                'created_at' => $wallpaper->created_at->format('Y-m-d H:i:s'),
+                'user' => $wallpaper->user ? [
+                    'name' => $wallpaper->user->name,
+                ] : null,
+            ],
+            'relatedWallpapers' => $relatedWallpapers,
+            'isFavorited' => Auth::check() ? Favorite::where('user_id', Auth::id())
+                ->where('wallpaper_id', $wallpaper->id)
+                ->exists() : false,
+        ]);
     }
 
     /**
@@ -310,5 +205,127 @@ class WallpaperController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    /**
+     * Download wallpaper
+     */
+    public function download(Wallpaper $wallpaper)
+    {
+        // Verificar si el usuario puede descargar (premium check)
+        if ($wallpaper->is_premium && (!Auth::check() || !Auth::user()->is_premium)) {
+            return redirect()->back()->withErrors([
+                'premium' => 'Este wallpaper es premium. Actualiza tu cuenta para descargarlo.'
+            ]);
+        }
+
+        // Registrar la descarga
+        if (Auth::check()) {
+            Download::create([
+                'user_id' => Auth::id(),
+                'wallpaper_id' => $wallpaper->id,
+                'ip_address' => request()->ip(),
+            ]);
+        }
+
+        // Incrementar contador de descargas
+        $wallpaper->increment('downloads_count');
+
+        // Si es una URL externa, redirigir
+        if (str_starts_with($wallpaper->file_path, 'http')) {
+            return redirect($wallpaper->file_path);
+        }
+
+        // Descargar archivo local
+        return Storage::disk('public')->download($wallpaper->file_path, $wallpaper->title . '.jpg');
+    }
+
+    /**
+     * Get trending wallpapers
+     */
+    public function trending()
+    {
+        $wallpapers = Wallpaper::with('category')
+            ->where('is_active', true)
+            ->orderBy('downloads_count', 'desc')
+            ->limit(12)
+            ->get()
+            ->map(function ($wallpaper) {
+                return [
+                    'id' => $wallpaper->id,
+                    'title' => $wallpaper->title,
+                    'file_path' => str_starts_with($wallpaper->file_path, 'http')
+                        ? $wallpaper->file_path
+                        : Storage::url($wallpaper->file_path),
+                    'thumbnail_path' => $wallpaper->thumbnail_path
+                        ? Storage::url($wallpaper->thumbnail_path)
+                        : Storage::url($wallpaper->file_path),
+                    'category' => $wallpaper->category->name ?? 'Sin categoría',
+                    'downloads_count' => $wallpaper->downloads_count,
+                    'is_premium' => $wallpaper->is_premium,
+                ];
+            });
+
+        return Inertia::render('wallpapers/trending', [
+            'wallpapers' => $wallpapers,
+        ]);
+    }
+
+    /**
+     * Get premium wallpapers
+     */
+    public function premium()
+    {
+        $wallpapers = Wallpaper::with('category')
+            ->where('is_active', true)
+            ->where('is_premium', true)
+            ->latest()
+            ->paginate(12)
+            ->through(function ($wallpaper) {
+                return [
+                    'id' => $wallpaper->id,
+                    'title' => $wallpaper->title,
+                    'file_path' => str_starts_with($wallpaper->file_path, 'http')
+                        ? $wallpaper->file_path
+                        : Storage::url($wallpaper->file_path),
+                    'thumbnail_path' => $wallpaper->thumbnail_path
+                        ? Storage::url($wallpaper->thumbnail_path)
+                        : Storage::url($wallpaper->file_path),
+                    'category' => $wallpaper->category->name ?? 'Sin categoría',
+                    'downloads_count' => $wallpaper->downloads_count,
+                    'is_premium' => $wallpaper->is_premium,
+                ];
+            });
+
+        return Inertia::render('wallpapers/premium', [
+            'wallpapers' => $wallpapers,
+        ]);
+    }
+
+    /**
+     * Toggle favorite status
+     */
+    public function toggleFavorite(Wallpaper $wallpaper)
+    {
+        $user = Auth::user();
+
+        $favorite = Favorite::where('user_id', $user->id)
+            ->where('wallpaper_id', $wallpaper->id)
+            ->first();
+
+        if ($favorite) {
+            $favorite->delete();
+            $isFavorited = false;
+        } else {
+            Favorite::create([
+                'user_id' => $user->id,
+                'wallpaper_id' => $wallpaper->id,
+            ]);
+            $isFavorited = true;
+        }
+
+        return response()->json([
+            'is_favorited' => $isFavorited,
+        ]);
     }
 }

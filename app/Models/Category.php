@@ -1,5 +1,13 @@
 <?php
 
+/**
+ * Modelo Category - Gestiona categorías de wallpapers en Vision4K
+ *
+ * Funcionalidades: categorías activas/inactivas, imagen de portada, slug único
+ * Relaciones: wallpapers (uno-a-muchos)
+ * Métodos clave: scopeActive(), getImageUrlAttribute()
+ */
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;

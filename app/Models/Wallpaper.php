@@ -1,5 +1,13 @@
 <?php
 
+/**
+ * Modelo Wallpaper - Gestiona wallpapers en Vision4K
+ *
+ * Funcionalidades: subida, categorías, descargas, vistas, favoritos, premium, destacados
+ * Relaciones: category, user, downloads, favorites
+ * Métodos clave: scopeActive(), scopeFeatured(), incrementDownloads(), incrementViews()
+ */
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -34,6 +42,7 @@ class Wallpaper extends Model
         'downloads_count' => 'integer',
         'views_count' => 'integer',
         'file_size' => 'integer',
+        'tags' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
