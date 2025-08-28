@@ -1,7 +1,6 @@
 import DashboardHeader from '@/components/dashboard/dashboard-header';
 import DashboardNavigation from '@/components/dashboard/dashboard-navigation';
 import FlashMessages from '@/components/flash-messages';
-import Footer from '@/components/footer';
 import { Head, router, useForm } from '@inertiajs/react';
 import { Edit, Eye, Filter, FolderOpen, Plus, Search, Trash2, Upload } from 'lucide-react';
 import { useState } from 'react';
@@ -636,8 +635,6 @@ export default function Dashboard({ auth, wallpapers = [], categories = [], stat
                         </div>
                     )}
                 </div>
-
-                <Footer />
             </div>
         </>
     );

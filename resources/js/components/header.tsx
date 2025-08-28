@@ -22,13 +22,6 @@ export default function Header({ currentPage = 'home', user }: HeaderProps) {
 
     return (
         <>
-            {/* Animated background particles */}
-            <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute top-20 left-20 h-72 w-72 animate-pulse rounded-full bg-purple-600/10 blur-3xl"></div>
-                <div className="absolute right-20 bottom-40 h-96 w-96 animate-pulse rounded-full bg-pink-600/10 blur-3xl delay-1000"></div>
-                <div className="absolute top-60 right-40 h-80 w-80 animate-pulse rounded-full bg-blue-600/10 blur-3xl delay-2000"></div>
-            </div>
-
             <header className="sticky top-0 z-20 border-b border-white/10 bg-black/20 backdrop-blur-md">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-20 items-center justify-between">
@@ -76,19 +69,6 @@ export default function Header({ currentPage = 'home', user }: HeaderProps) {
                                     Trending
                                     {isCurrentPage('trending') ? (
                                         <span className="absolute -bottom-1 left-0 h-0.5 w-full bg-gradient-to-r from-purple-500 to-pink-500"></span>
-                                    ) : (
-                                        <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300 group-hover:w-full"></span>
-                                    )}
-                                </Link>
-                                <Link
-                                    href={route('wallpapers.premium')}
-                                    className={`group relative transition-colors duration-300 ${
-                                        isCurrentPage('premium') ? 'text-white' : 'text-gray-300 hover:text-white'
-                                    }`}
-                                >
-                                    Premium
-                                    {isCurrentPage('premium') ? (
-                                        <span className="absolute -bottom-1 left-0 h-0.5 w-full bg-gradient-to-r from-yellow-500 to-yellow-400"></span>
                                     ) : (
                                         <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300 group-hover:w-full"></span>
                                     )}

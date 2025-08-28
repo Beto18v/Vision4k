@@ -66,12 +66,8 @@ class WelcomeController extends Controller
     {
         $defaultImages = [
             'naturaleza' => 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-            'abstracto' => 'https://images.unsplash.com/photo-1551085254-c51a29bfbcd1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-            'urbano' => 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-            'tecnologia' => 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-            'espacio' => 'https://images.unsplash.com/photo-1446776877081-d282a0f896e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-            'minimalista' => 'https://images.unsplash.com/photo-1557683316-973673baf926?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-            'gaming' => 'https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+            'fantasia' => 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+            'anime' => 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
         ];
 
         return $defaultImages[$slug] ?? 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
@@ -121,14 +117,14 @@ class WelcomeController extends Controller
             ],
             [
                 'id' => 2,
-                'name' => 'Abstracto',
-                'image' => 'https://images.unsplash.com/photo-1551085254-c51a29bfbcd1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+                'name' => 'Fantasia',
+                'image' => 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
                 'wallpaper_count' => 0,
             ],
             [
                 'id' => 3,
-                'name' => 'Urbano',
-                'image' => 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+                'name' => 'Anime',
+                'image' => 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
                 'wallpaper_count' => 0,
             ],
         ]);
