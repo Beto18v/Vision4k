@@ -26,12 +26,7 @@ export default function CreateCategoryModal({ isOpen, onClose, onSubmit, onSucce
         }
 
         onSubmit(formData);
-        // El reset se hará en onSuccess callback
-        if (onSuccess) {
-            setProcessing(false);
-            setCategoryData({ name: '', image: null });
-            onSuccess();
-        }
+        // No llamar onSuccess aquí - se hará desde el componente padre cuando sea exitoso
     };
 
     if (!isOpen) return null;

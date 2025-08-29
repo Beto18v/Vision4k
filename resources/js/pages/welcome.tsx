@@ -5,7 +5,7 @@ import Hero from '@/components/hero';
 import SearchBar from '@/components/search-bar';
 import ViewModeToggle from '@/components/view-mode-toggle';
 import WallpaperModal from '@/components/wallpaper-modal';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 // Definimos la estructura de un Wallpaper
@@ -17,6 +17,7 @@ interface Wallpaper {
     tags: string[];
     downloads_count?: number;
     is_premium?: boolean;
+    is_favorited?: boolean;
 }
 
 // Definimos las categorías
@@ -30,19 +31,27 @@ interface Category {
 interface WelcomeProps {
     wallpapers: Wallpaper[];
     categories: Category[];
+    auth?: {
+        user: {
+            id: number;
+            name: string;
+            email: string;
+        };
+    };
 }
 
-export default function Welcome({ wallpapers, categories }: WelcomeProps) {
+export default function Welcome({ wallpapers, categories, auth }: WelcomeProps) {
     // const { auth } = usePage<SharedData>().props;
     const [selectedWallpaper, setSelectedWallpaper] = useState<Wallpaper | null>(null);
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [viewMode, setViewMode] = useState<'grid' | 'masonry'>('grid');
     const [sortBy, setSortBy] = useState<'newest' | 'popular' | 'name'>('newest');
+    const [currentWallpapers, setCurrentWallpapers] = useState<Wallpaper[]>(wallpapers);
     // const [isLoading, setIsLoading] = useState(false);
 
     // Filtrar wallpapers basado en categoría y búsqueda
-    const filteredWallpapers = wallpapers.filter((wallpaper) => {
+    const filteredWallpapers = currentWallpapers.filter((wallpaper) => {
         const matchesCategory = selectedCategory === 'all' || wallpaper.category.toLowerCase().includes(selectedCategory.toLowerCase());
         const matchesSearch =
             wallpaper.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -50,8 +59,45 @@ export default function Welcome({ wallpapers, categories }: WelcomeProps) {
         return matchesCategory && matchesSearch;
     });
 
-    const handleWallpaperClick = (wallpaper: Wallpaper) => {
+    // Función para manejar favoritos
+    const handleToggleFavorite = (wallpaperId: number, e: React.MouseEvent) => {
+        e.stopPropagation(); // Evitar que se abra el modal
+
+        if (!auth?.user) {
+            // Si no está autenticado, redirigir al login
+            window.location.href = '/login';
+            return;
+        }
+
+        router.post(
+            `/wallpapers/${wallpaperId}/favorite`,
+            {},
+            {
+                onSuccess: () => {
+                    // Actualizar el estado local
+                    setCurrentWallpapers((prev) => prev.map((w) => (w.id === wallpaperId ? { ...w, is_favorited: !w.is_favorited } : w)));
+                },
+                onError: (errors) => {
+                    console.error('Error al actualizar favorito:', errors);
+                },
+            },
+        );
+    };
+
+    const handleWallpaperClick = async (wallpaper: Wallpaper) => {
         setSelectedWallpaper(wallpaper);
+
+        // Incrementar vistas automáticamente cuando se abre el modal
+        try {
+            await fetch(`/wallpapers/${wallpaper.id}/view`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+        } catch (error) {
+            console.error('Error incrementando vistas:', error);
+        }
     };
 
     const handleModalClose = () => {
@@ -259,29 +305,31 @@ export default function Welcome({ wallpapers, categories }: WelcomeProps) {
 
                                 {/* Botones de acción mejorados */}
                                 <div className="absolute top-2 right-2 flex translate-y-2 transform space-x-2 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-                                    <button
-                                        className="group/btn rounded-full bg-black/40 p-2 backdrop-blur-sm transition-all duration-300 hover:bg-black/60"
-                                        title="Vista previa"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleWallpaperClick(wallpaper);
-                                        }}
-                                    >
-                                        <svg
-                                            className="h-4 w-4 text-white transition-transform group-hover/btn:scale-110"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
+                                    {auth?.user && (
+                                        <button
+                                            className={`group/btn rounded-full p-2 backdrop-blur-sm transition-all duration-300 ${
+                                                wallpaper.is_favorited ? 'bg-yellow-600/80 hover:bg-yellow-600' : 'bg-white/20 hover:bg-white/30'
+                                            }`}
+                                            title={wallpaper.is_favorited ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                                            onClick={(e) => handleToggleFavorite(wallpaper.id, e)}
                                         >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                            />
-                                        </svg>
-                                    </button>
+                                            <svg
+                                                className={`h-4 w-4 transition-transform group-hover/btn:scale-110 ${
+                                                    wallpaper.is_favorited ? 'text-white' : 'text-white/80'
+                                                }`}
+                                                fill={wallpaper.is_favorited ? 'currentColor' : 'none'}
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                                                />
+                                            </svg>
+                                        </button>
+                                    )}
                                     <button
                                         className="group/btn rounded-full bg-gradient-to-r from-purple-600/80 to-pink-600/80 p-2 backdrop-blur-sm transition-all duration-300 hover:from-purple-600 hover:to-pink-600"
                                         title="Descargar"

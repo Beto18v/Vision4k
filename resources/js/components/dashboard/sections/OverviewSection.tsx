@@ -125,7 +125,7 @@ export default function OverviewSection({ auth, categories = [], stats, analytic
                     </button>
                 </div>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {displayCategories.slice(0, 6).map((category) => (
+                    {displayCategories.slice(0, 20).map((category) => (
                         <div
                             key={category.id}
                             className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 p-4 transition-colors hover:bg-white/10"
@@ -154,27 +154,35 @@ export default function OverviewSection({ auth, categories = [], stats, analytic
                     <div className="rounded-xl border border-white/10 bg-black/20 p-6 backdrop-blur-sm">
                         <h3 className="mb-4 text-lg font-semibold text-white">Descargas por Categoría</h3>
                         <div className="space-y-3">
-                            {analytics.downloads_by_category.slice(0, 5).map((category, index) => {
-                                const progress = category.downloads % 100;
-                                const currentGoal = Math.floor(category.downloads / 100) * 100;
-                                const nextGoal = currentGoal + 100;
-                                const progressPercentage = (progress / 100) * 100;
+                            {(() => {
+                                // Usar las categorías disponibles con sus descargas totales
+                                const categoriesWithDownloads = displayCategories.filter((cat) => cat.total_downloads > 0);
+                                // Ordenar categorías por descargas totales de mayor a menor
+                                const sortedCategories = [...categoriesWithDownloads].sort((a, b) => b.total_downloads - a.total_downloads);
+                                // Calcular el total de descargas de todas las categorías
+                                const totalDownloads = sortedCategories.reduce((sum, cat) => sum + cat.total_downloads, 0);
 
-                                return (
-                                    <div key={index} className="flex items-center justify-between">
-                                        <span className="text-gray-300">{category.name}</span>
-                                        <div className="flex items-center space-x-3">
-                                            <div className="h-2 w-24 rounded-full bg-white/10">
-                                                <div
-                                                    className="h-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600"
-                                                    style={{ width: `${progressPercentage}%` }}
-                                                ></div>
+                                return sortedCategories.slice(0, 5).map((category, index) => {
+                                    // Calcular porcentaje relativo al total (representación)
+                                    const percentage = totalDownloads > 0 ? (category.total_downloads / totalDownloads) * 100 : 0;
+
+                                    return (
+                                        <div key={index} className="flex items-center justify-between">
+                                            <span className="text-gray-300">{category.name}</span>
+                                            <div className="flex items-center space-x-3">
+                                                <span className="text-sm text-white">{percentage.toFixed(1)}%</span>
+                                                <div className="h-2 w-24 rounded-full bg-white/10">
+                                                    <div
+                                                        className="h-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600"
+                                                        style={{ width: `${percentage}%` }}
+                                                    ></div>
+                                                </div>
+                                                <span className="text-sm text-white">{category.total_downloads}</span>
                                             </div>
-                                            <span className="text-sm text-white">{category.downloads}</span>
                                         </div>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                });
+                            })()}
                         </div>
                     </div>
 

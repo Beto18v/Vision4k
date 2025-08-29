@@ -19,6 +19,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/dashboard/categories', [DashboardController::class, 'storeCategory'])->name('dashboard.categories.store');
     Route::get('/dashboard/categories-data', [DashboardController::class, 'getCategories'])->name('dashboard.categories.data');
     Route::get('/dashboard/analytics', [DashboardController::class, 'analytics'])->name('dashboard.analytics');
+    Route::get('/dashboard/favorites', [DashboardController::class, 'getFavorites'])->name('dashboard.favorites');
 
     // Settings routes
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
@@ -35,6 +36,7 @@ Route::middleware(['auth'])->group(function () {
 Route::get('/wallpapers', [WallpaperController::class, 'index'])->name('wallpapers.index');
 Route::get('/wallpapers/{wallpaper}', [WallpaperController::class, 'show'])->name('wallpapers.show');
 Route::get('/wallpapers/{wallpaper}/download', [WallpaperController::class, 'download'])->name('wallpapers.download');
+Route::get('/wallpapers/{wallpaper}/view', [WallpaperController::class, 'incrementView'])->name('wallpapers.view');
 
 // New routes
 Route::get('/trending', [WallpaperController::class, 'trending'])->name('wallpapers.trending');

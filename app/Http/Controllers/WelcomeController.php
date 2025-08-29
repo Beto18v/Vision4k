@@ -4,20 +4,28 @@ namespace App\Http\Controllers;
 
 use App\Models\Wallpaper;
 use App\Models\Category;
+use App\Models\Favorite;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class WelcomeController extends Controller
 {
     public function index()
     {
+        $user = Auth::user();
+
         // Obtener wallpapers destacados y recientes
         $wallpapers = Wallpaper::with('category')
             ->where('is_active', true)
             ->latest()
             ->limit(12)
             ->get()
-            ->map(function ($wallpaper) {
+            ->map(function ($wallpaper) use ($user) {
+                $isFavorited = $user ? Favorite::where('user_id', $user->id)
+                    ->where('wallpaper_id', $wallpaper->id)
+                    ->exists() : false;
+
                 return [
                     'id' => $wallpaper->id,
                     'url' => str_starts_with($wallpaper->file_path, 'http')
@@ -28,6 +36,7 @@ class WelcomeController extends Controller
                     'tags' => $wallpaper->tags ? explode(',', trim($wallpaper->tags)) : [],
                     'downloads_count' => $wallpaper->downloads_count,
                     'is_premium' => $wallpaper->is_premium,
+                    'is_favorited' => $isFavorited,
                 ];
             });
 
@@ -59,6 +68,13 @@ class WelcomeController extends Controller
         return Inertia::render('welcome', [
             'wallpapers' => $wallpapers,
             'categories' => $categories,
+            'auth' => $user ? [
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                ],
+            ] : null,
         ]);
     }
 
@@ -84,6 +100,7 @@ class WelcomeController extends Controller
                 'tags' => ['mountains', 'sunrise', 'landscape', 'nature'],
                 'downloads_count' => 0,
                 'is_premium' => false,
+                'is_favorited' => false,
             ],
             [
                 'id' => 2,
@@ -93,6 +110,7 @@ class WelcomeController extends Controller
                 'tags' => ['ocean', 'beach', 'water', 'blue'],
                 'downloads_count' => 0,
                 'is_premium' => false,
+                'is_favorited' => false,
             ],
             [
                 'id' => 3,
@@ -102,6 +120,7 @@ class WelcomeController extends Controller
                 'tags' => ['city', 'night', 'lights', 'urban'],
                 'downloads_count' => 0,
                 'is_premium' => false,
+                'is_favorited' => false,
             ],
         ]);
     }

@@ -16,11 +16,10 @@ use App\Models\Favorite;
 use App\Models\Wallpaper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
 
 class DashboardController extends Controller
 {
@@ -338,5 +337,56 @@ class DashboardController extends Controller
         ];
 
         return response()->json($analytics);
+    }
+
+    /**
+     * Obtener wallpapers favoritos del usuario
+     */
+    public function getFavorites()
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Usuario no autenticado'], 401);
+        }
+
+        try {
+            $favorites = Favorite::where('user_id', $user->id)
+                ->with(['wallpaper.category', 'wallpaper.user'])
+                ->get()
+                ->map(function ($favorite) {
+                    $wallpaper = $favorite->wallpaper;
+                    if (!$wallpaper) {
+                        return null;
+                    }
+
+                    return [
+                        'id' => $wallpaper->id,
+                        'title' => $wallpaper->title,
+                        'description' => $wallpaper->description,
+                        'file_path' => str_starts_with($wallpaper->file_path, 'http')
+                            ? $wallpaper->file_path
+                            : Storage::url($wallpaper->file_path),
+                        'category' => $wallpaper->category->name ?? 'Sin categoría',
+                        'downloads_count' => $wallpaper->downloads_count,
+                        'views_count' => $wallpaper->views_count ?? 0,
+                        'created_at' => $wallpaper->created_at->format('Y-m-d'),
+                        'is_featured' => $wallpaper->is_featured,
+                        'is_active' => $wallpaper->is_active,
+                        'is_premium' => $wallpaper->is_premium,
+                        'is_favorited' => true,
+                        'user' => $wallpaper->user ? ['name' => $wallpaper->user->name] : null,
+                    ];
+                })
+                ->filter()
+                ->values();
+
+            return response()->json([
+                'favorites' => $favorites,
+                'total' => $favorites->count(),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

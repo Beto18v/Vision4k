@@ -1,12 +1,13 @@
 import CreateCategoryModal from '@/components/dashboard/CreateCategoryModal';
 import DashboardHeader from '@/components/dashboard/dashboard-header';
+import FavoritesSection from '@/components/dashboard/sections/FavoritesSection';
 import OverviewSection from '@/components/dashboard/sections/OverviewSection';
 import SettingsSection from '@/components/dashboard/sections/SettingsSection';
 import UploadSection from '@/components/dashboard/sections/UploadSection';
 import WallpapersSection from '@/components/dashboard/sections/WallpapersSection';
 import FlashMessages from '@/components/flash-messages';
 import { Head, router } from '@inertiajs/react';
-import { BarChart3, FolderOpen, Settings, Upload } from 'lucide-react';
+import { BarChart3, FolderOpen, Settings, Star, Upload } from 'lucide-react';
 import { useState } from 'react';
 
 interface DashboardProps {
@@ -71,15 +72,19 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ auth, wallpapers = [], categories = [], stats, analytics }: DashboardProps) {
-    const [activeTab, setActiveTab] = useState<'overview' | 'wallpapers' | 'upload' | 'settings'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'wallpapers' | 'favorites' | 'upload' | 'settings'>('overview');
     const [showCreateCategory, setShowCreateCategory] = useState(false);
     const [currentCategories, setCurrentCategories] = useState(categories);
+    const [currentWallpapers, setCurrentWallpapers] = useState(wallpapers);
+    const [favorites, setFavorites] = useState<Array<any>>([]);
+    const [loading, setLoading] = useState(false);
 
     const handleDeleteWallpaper = (wallpaperId: number) => {
         if (confirm('¿Estás seguro de que quieres eliminar este wallpaper?')) {
             router.delete(route('dashboard.wallpapers.destroy', wallpaperId), {
                 onSuccess: () => {
-                    window.location.reload();
+                    // Actualizar estado local en lugar de recargar página
+                    setCurrentWallpapers((prev) => prev.filter((w) => w.id !== wallpaperId));
                 },
                 onError: (errors) => {
                     console.error('Error al eliminar:', errors);
@@ -88,8 +93,33 @@ export default function Dashboard({ auth, wallpapers = [], categories = [], stat
         }
     };
 
-    const handleViewWallpaper = (wallpaperId: number) => {
-        router.visit(route('wallpapers.show', wallpaperId));
+    const fetchFavorites = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch(route('dashboard.favorites'));
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            setFavorites(data.favorites || []);
+        } catch (error) {
+            console.error('Error fetching favorites:', error);
+            setFavorites([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleToggleFavorite = (wallpaperId: number) => {
+        router.post(
+            route('wallpapers.favorite', wallpaperId),
+            {},
+            {
+                onError: (errors) => {
+                    console.error('Error toggling favorite:', errors);
+                },
+            },
+        );
     };
 
     return (
@@ -109,7 +139,8 @@ export default function Dashboard({ auth, wallpapers = [], categories = [], stat
                         <div className="flex flex-wrap gap-2">
                             {[
                                 { key: 'overview', label: 'Resumen', icon: BarChart3 },
-                                { key: 'wallpapers', label: auth.is_admin ? 'Wallpapers' : 'Favoritos', icon: FolderOpen },
+                                { key: 'wallpapers', label: auth.is_admin ? 'Wallpapers' : 'Todos', icon: FolderOpen },
+                                { key: 'favorites', label: 'Favoritos', icon: Star },
                                 ...(auth.is_admin
                                     ? [
                                           { key: 'upload', label: 'Subir', icon: Upload },
@@ -119,10 +150,17 @@ export default function Dashboard({ auth, wallpapers = [], categories = [], stat
                             ].map(({ key, label, icon: Icon }) => (
                                 <button
                                     key={key}
-                                    onClick={() => setActiveTab(key as any)}
+                                    onClick={() => {
+                                        setActiveTab(key as any);
+                                        if (key === 'favorites') {
+                                            fetchFavorites();
+                                        }
+                                    }}
                                     className={`flex items-center space-x-2 rounded-lg px-4 py-2 font-medium transition-colors ${
                                         activeTab === key
-                                            ? 'bg-purple-600 text-white'
+                                            ? key === 'favorites'
+                                                ? 'bg-red-600 text-white'
+                                                : 'bg-purple-600 text-white'
                                             : 'bg-white/10 text-gray-300 hover:bg-white/20 hover:text-white'
                                     }`}
                                 >
@@ -162,7 +200,8 @@ export default function Dashboard({ auth, wallpapers = [], categories = [], stat
                                 router.post(route('dashboard.store'), formData, {
                                     onSuccess: () => {
                                         alert('Wallpaper(s) subido(s) exitosamente');
-                                        window.location.reload();
+                                        // Actualizar estado local en lugar de recargar
+                                        router.reload();
                                     },
                                     onError: (errors) => {
                                         console.error('Error:', errors);
@@ -173,13 +212,18 @@ export default function Dashboard({ auth, wallpapers = [], categories = [], stat
                         />
                     )}
 
+                    {/* Favorites Tab */}
+                    {activeTab === 'favorites' && (
+                        <FavoritesSection auth={auth} favorites={favorites} loading={loading} onToggleFavorite={handleToggleFavorite} />
+                    )}
+
                     {/* Wallpapers Management */}
                     {activeTab === 'wallpapers' && (
                         <WallpapersSection
                             auth={auth}
-                            wallpapers={wallpapers || []}
+                            wallpapers={currentWallpapers || []}
                             onDeleteWallpaper={handleDeleteWallpaper}
-                            onViewWallpaper={handleViewWallpaper}
+                            onToggleFavorite={handleToggleFavorite}
                         />
                     )}
 
@@ -223,10 +267,12 @@ export default function Dashboard({ auth, wallpapers = [], categories = [], stat
                 onClose={() => setShowCreateCategory(false)}
                 onSubmit={(formData) => {
                     router.post(route('dashboard.categories.store'), formData, {
-                        onSuccess: () => {
+                        onSuccess: (page) => {
                             setShowCreateCategory(false);
-                            // Recargar página para mostrar nueva categoría
-                            window.location.reload();
+                            // Actualizar estado local con la nueva categoría
+                            const newCategories = (page.props.categories as Array<any>) || [];
+                            setCurrentCategories(newCategories);
+                            alert('Categoría creada exitosamente');
                         },
                         onError: (errors) => {
                             console.error('Error al crear categoría:', errors);

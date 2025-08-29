@@ -315,17 +315,28 @@ class WallpaperController extends Controller
 
         if ($favorite) {
             $favorite->delete();
-            $isFavorited = false;
+            $message = 'Wallpaper removido de favoritos';
         } else {
             Favorite::create([
                 'user_id' => $user->id,
                 'wallpaper_id' => $wallpaper->id,
             ]);
-            $isFavorited = true;
+            $message = 'Wallpaper agregado a favoritos';
         }
 
+        return redirect()->route('dashboard')->with('success', $message);
+    }
+
+    /**
+     * Increment view count for a wallpaper
+     */
+    public function incrementView(Wallpaper $wallpaper)
+    {
+        $wallpaper->increment('views_count');
+
         return response()->json([
-            'is_favorited' => $isFavorited,
+            'success' => true,
+            'views_count' => $wallpaper->views_count,
         ]);
     }
 }

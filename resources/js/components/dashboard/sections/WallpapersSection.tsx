@@ -1,4 +1,4 @@
-import { Eye, Filter, Search, Star } from 'lucide-react';
+import { Filter, Search, Star } from 'lucide-react';
 import { useState } from 'react';
 
 interface WallpapersSectionProps {
@@ -29,10 +29,10 @@ interface WallpapersSectionProps {
         };
     }>;
     onDeleteWallpaper: (wallpaperId: number) => void;
-    onViewWallpaper: (wallpaperId: number) => void;
+    onToggleFavorite?: (wallpaperId: number) => void;
 }
 
-export default function WallpapersSection({ auth, wallpapers = [], onDeleteWallpaper, onViewWallpaper }: WallpapersSectionProps) {
+export default function WallpapersSection({ auth, wallpapers = [], onDeleteWallpaper, onToggleFavorite }: WallpapersSectionProps) {
     const [searchTerm, setSearchTerm] = useState('');
 
     const displayWallpapers = wallpapers || [];
@@ -72,7 +72,13 @@ export default function WallpapersSection({ auth, wallpapers = [], onDeleteWallp
                             <div className="relative">
                                 <img src={wallpaper.file_path} alt={wallpaper.title} className="h-48 w-full object-cover" />
                                 <div className="absolute top-2 right-2 flex space-x-1">
-                                    {wallpaper.is_favorited && <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />}
+                                    <button
+                                        onClick={() => onToggleFavorite?.(wallpaper.id)}
+                                        className="rounded-lg bg-black/50 p-2 text-yellow-400 backdrop-blur-sm transition-colors hover:bg-black/70"
+                                        title={wallpaper.is_favorited ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                                    >
+                                        <Star className={`h-4 w-4 ${wallpaper.is_favorited ? 'fill-current' : ''}`} />
+                                    </button>
                                     {auth.is_admin && (
                                         <button
                                             onClick={() => onDeleteWallpaper(wallpaper.id)}
@@ -89,15 +95,6 @@ export default function WallpapersSection({ auth, wallpapers = [], onDeleteWallp
                                             </svg>
                                         </button>
                                     )}
-                                </div>
-                                <div className="absolute top-2 left-2">
-                                    <button
-                                        onClick={() => onViewWallpaper(wallpaper.id)}
-                                        className="rounded-lg bg-black/60 p-2 text-white backdrop-blur-sm transition-colors hover:bg-black/80"
-                                        title="Ver wallpaper"
-                                    >
-                                        <Eye size={14} />
-                                    </button>
                                 </div>
                             </div>
                             <div className="p-4">
