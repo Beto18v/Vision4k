@@ -10,13 +10,13 @@ interface User {
 }
 
 interface HeaderProps {
-    currentPage?: 'home' | 'trending' | 'premium';
+    currentPage?: 'home';
     user?: User;
 }
 
 export default function Header({ currentPage = 'home', user }: HeaderProps) {
     const { auth } = usePage<SharedData>().props;
-    const isPremiumUser = user?.is_premium || false;
+    const isPremiumUser = auth.user?.is_premium || false;
 
     const isCurrentPage = (page: string) => currentPage === page;
 
@@ -55,19 +55,6 @@ export default function Header({ currentPage = 'home', user }: HeaderProps) {
                                 >
                                     Inicio
                                     {isCurrentPage('home') ? (
-                                        <span className="absolute -bottom-1 left-0 h-0.5 w-full bg-gradient-to-r from-purple-500 to-pink-500"></span>
-                                    ) : (
-                                        <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300 group-hover:w-full"></span>
-                                    )}
-                                </Link>
-                                <Link
-                                    href={route('wallpapers.trending')}
-                                    className={`group relative transition-colors duration-300 ${
-                                        isCurrentPage('trending') ? 'text-white' : 'text-gray-300 hover:text-white'
-                                    }`}
-                                >
-                                    Trending
-                                    {isCurrentPage('trending') ? (
                                         <span className="absolute -bottom-1 left-0 h-0.5 w-full bg-gradient-to-r from-purple-500 to-pink-500"></span>
                                     ) : (
                                         <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300 group-hover:w-full"></span>

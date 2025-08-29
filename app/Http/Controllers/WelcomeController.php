@@ -68,13 +68,6 @@ class WelcomeController extends Controller
         return Inertia::render('welcome', [
             'wallpapers' => $wallpapers,
             'categories' => $categories,
-            'auth' => $user ? [
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                ],
-            ] : null,
         ]);
     }
 

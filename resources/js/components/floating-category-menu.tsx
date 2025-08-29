@@ -77,7 +77,7 @@ export default function FloatingCategoryMenu({ categories, selectedCategory, onC
                     isOpen ? 'translate-x-0 scale-100 opacity-100' : 'pointer-events-none -translate-x-8 scale-95 opacity-0'
                 }`}
             >
-                <div className="rounded-2xl border border-white/10 bg-black/90 p-4 shadow-2xl backdrop-blur-xl">
+                <div className="rounded-2xl border border-white/10 bg-purple-950 p-4 shadow-2xl backdrop-blur-xl">
                     <h3 className="mb-4 text-lg font-bold text-white">Categorías</h3>
 
                     {/* All Categories Option */}
