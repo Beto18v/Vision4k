@@ -105,7 +105,14 @@ class DashboardController extends Controller
                 }),
             'popular_wallpapers' => Wallpaper::orderBy('downloads_count', 'desc')
                 ->take(5)
-                ->get(['title', 'downloads_count', 'file_path']),
+                ->get()
+                ->map(function ($wallpaper) {
+                    return [
+                        'title' => $wallpaper->title,
+                        'downloads_count' => $wallpaper->downloads_count,
+                        'file_path' => $wallpaper->image_url, // Usar la URL completa en lugar de file_path
+                    ];
+                }),
             'uploads_by_month' => Wallpaper::selectRaw("strftime('%m', created_at) as month, COUNT(*) as count")
                 ->whereRaw("strftime('%Y', created_at) = ?", [now()->year])
                 ->groupByRaw("strftime('%m', created_at)")
@@ -131,7 +138,7 @@ class DashboardController extends Controller
             'title' => 'nullable|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'files' => 'required|array|min:1|max:20', // Máximo 20 archivos
-            'files.*' => 'required|image|mimes:jpeg,png,jpg,webp|max:10240', // 10MB máximo
+            'files.*' => 'file|mimes:jpeg,png,jpg,webp|max:10240', // 10MB máximo
         ]);
 
         $uploadedFiles = [];
@@ -142,7 +149,12 @@ class DashboardController extends Controller
                     // Obtener dimensiones de la imagen
                     $imageSize = getimagesize($file->path());
                     if (!$imageSize) {
-                        return back()->withErrors(['files' => 'No se pudo leer la información de la imagen.']);
+                        // Si no se puede obtener el tamaño, usar valores por defecto
+                        $width = 1920;
+                        $height = 1080;
+                    } else {
+                        $width = $imageSize[0];
+                        $height = $imageSize[1];
                     }
 
                     // Generar nombre único
@@ -163,7 +175,7 @@ class DashboardController extends Controller
                         'category_id' => $request->category_id,
                         'tags' => null, // Sin tags
                         'file_size' => $file->getSize(),
-                        'resolution' => $imageSize[0] . 'x' . $imageSize[1],
+                        'resolution' => $width . 'x' . $height,
                         'is_featured' => false, // Sin destacar
                         'is_active' => true, // Siempre activo
                         'is_premium' => false, // No premium por defecto
@@ -213,28 +225,45 @@ class DashboardController extends Controller
     // Método para crear categorías (mejorado)
     public function storeCategory(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255|unique:categories',
-            'description' => 'nullable|string|max:500',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', // 2MB máximo
-        ]);
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255|unique:categories',
+                'description' => 'nullable|string|max:500',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', // 2MB máximo
+            ]);
 
-        $data = [
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'description' => $request->description,
-            'is_active' => true,
-        ];
+            $data = [
+                'name' => $request->name,
+                'slug' => Str::slug($request->name),
+                'description' => $request->description,
+                'is_active' => true,
+            ];
 
-        // Manejar imagen si se proporciona
-        if ($request->hasFile('image')) {
-            $imageName = 'category_' . time() . '.' . $request->file('image')->getClientOriginalExtension();
-            $data['image_path'] = $request->file('image')->storeAs('categories', $imageName, 'public');
+            // Manejar imagen si se proporciona
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+
+                // Verificar que el archivo sea válido
+                if (!$file->isValid()) {
+                    return back()->withErrors(['image' => 'El archivo de imagen no es válido.']);
+                }
+
+                $imageName = 'category_' . time() . '.' . $file->getClientOriginalExtension();
+
+                // Intentar guardar la imagen
+                try {
+                    $data['image_path'] = $file->storeAs('categories', $imageName, 'public');
+                } catch (\Exception $e) {
+                    return back()->withErrors(['image' => 'Error al guardar la imagen: ' . $e->getMessage()]);
+                }
+            }
+
+            Category::create($data);
+
+            return redirect()->route('dashboard')->with('success', 'Categoría creada exitosamente.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['general' => 'Error al crear la categoría: ' . $e->getMessage()]);
         }
-
-        Category::create($data);
-
-        return back()->with('success', 'Categoría creada exitosamente.');
     }
 
     // Método para obtener categorías detalladas para el dashboard
@@ -294,7 +323,14 @@ class DashboardController extends Controller
                 }),
             'popular_wallpapers' => Wallpaper::orderBy('downloads_count', 'desc')
                 ->limit(10)
-                ->get(['title', 'downloads_count', 'file_path']),
+                ->get()
+                ->map(function ($wallpaper) {
+                    return [
+                        'title' => $wallpaper->title,
+                        'downloads_count' => $wallpaper->downloads_count,
+                        'file_path' => $wallpaper->image_url, // Usar la URL completa
+                    ];
+                }),
             'uploads_by_month' => Wallpaper::selectRaw("strftime('%m', created_at) as month, COUNT(*) as count")
                 ->whereRaw("strftime('%Y', created_at) = ?", [now()->year])
                 ->groupByRaw("strftime('%m', created_at)")
