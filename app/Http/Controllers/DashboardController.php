@@ -138,7 +138,7 @@ class DashboardController extends Controller
             'title' => 'nullable|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'files' => 'required|array|min:1|max:20', // Máximo 20 archivos
-            'files.*' => 'file|mimes:jpeg,png,jpg,webp|max:10240', // 10MB máximo
+            'files.*' => 'file|mimes:jpeg,png,jpg,webp|max:20480', // 20MB máximo
         ]);
 
         $uploadedFiles = [];
