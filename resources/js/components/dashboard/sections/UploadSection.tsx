@@ -79,19 +79,19 @@ export default function UploadSection({ auth, categories = [], onSubmit }: Uploa
 
         // Validar tipos de archivo
         const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
-        const invalidFiles = Array.from(uploadFiles).filter(file => !allowedTypes.includes(file.type));
+        const invalidFiles = Array.from(uploadFiles).filter((file) => !allowedTypes.includes(file.type));
 
         if (invalidFiles.length > 0) {
-            alert(`Los siguientes archivos no son válidos: ${invalidFiles.map(f => f.name).join(', ')}\n\nFormatos permitidos: JPG, PNG, WebP`);
+            alert(`Los siguientes archivos no son válidos: ${invalidFiles.map((f) => f.name).join(', ')}\n\nFormatos permitidos: JPG, PNG, WebP`);
             return;
         }
 
         // Validar tamaño de archivos (20MB máximo para imágenes 4K)
         const maxSize = 20 * 1024 * 1024; // 20MB en bytes
-        const oversizedFiles = Array.from(uploadFiles).filter(file => file.size > maxSize);
+        const oversizedFiles = Array.from(uploadFiles).filter((file) => file.size > maxSize);
 
         if (oversizedFiles.length > 0) {
-            alert(`Los siguientes archivos son demasiado grandes (máximo 20MB): ${oversizedFiles.map(f => f.name).join(', ')}`);
+            alert(`Los siguientes archivos son demasiado grandes (máximo 20MB): ${oversizedFiles.map((f) => f.name).join(', ')}`);
             return;
         }
 
@@ -162,21 +162,21 @@ export default function UploadSection({ auth, categories = [], onSubmit }: Uploa
                     </div>
 
                     {/* Form Fields */}
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        <div className="flex justify-center md:col-span-2">
-                            <select
-                                value={categoryId}
-                                onChange={(e) => setCategoryId(e.target.value)}
-                                className="w-80 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-white focus:ring-2 focus:ring-purple-500/50 focus:outline-none"
-                            >
-                                <option value="">Seleccionar categoría</option>
-                                {displayCategories.map((category) => (
-                                    <option key={category.id} value={category.id}>
-                                        {category.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                    <div className="flex justify-center md:col-span-2">
+                        <select
+                            value={categoryId}
+                            onChange={(e) => setCategoryId(e.target.value)}
+                            className="w-80 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-white focus:ring-2 focus:ring-purple-500/50 focus:outline-none"
+                        >
+                            <option value="" style={{ backgroundColor: '#1a1a1a', color: 'white' }}>
+                                Seleccionar categoría
+                            </option>
+                            {displayCategories.map((category) => (
+                                <option key={category.id} value={category.id} style={{ backgroundColor: '#1a1a1a', color: 'white' }}>
+                                    {category.name}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     <button
