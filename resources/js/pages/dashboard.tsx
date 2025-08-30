@@ -1,13 +1,11 @@
-import CreateCategoryModal from '@/components/dashboard/CreateCategoryModal';
 import DashboardHeader from '@/components/dashboard/dashboard-header';
+import DashboardNavigation from '@/components/dashboard/dashboard-navigation';
 import FavoritesSection from '@/components/dashboard/sections/FavoritesSection';
 import OverviewSection from '@/components/dashboard/sections/OverviewSection';
 import SettingsSection from '@/components/dashboard/sections/SettingsSection';
 import UploadSection from '@/components/dashboard/sections/UploadSection';
 import WallpapersSection from '@/components/dashboard/sections/WallpapersSection';
-import FlashMessages from '@/components/flash-messages';
 import { Head, router } from '@inertiajs/react';
-import { BarChart3, FolderOpen, Settings, Star, Upload } from 'lucide-react';
 import { useState } from 'react';
 
 interface DashboardProps {
@@ -130,46 +128,21 @@ export default function Dashboard({ auth, wallpapers = [], categories = [], stat
             </Head>
 
             <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-                <FlashMessages />
                 <DashboardHeader userName={auth.user.name} userRole={auth.role} />
 
                 <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-                    {/* Custom Navigation without Analytics */}
-                    <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-                        <div className="flex flex-wrap gap-2">
-                            {[
-                                { key: 'overview', label: 'Resumen', icon: BarChart3 },
-                                { key: 'wallpapers', label: auth.is_admin ? 'Wallpapers' : 'Todos', icon: FolderOpen },
-                                { key: 'favorites', label: 'Favoritos', icon: Star },
-                                ...(auth.is_admin
-                                    ? [
-                                          { key: 'upload', label: 'Subir', icon: Upload },
-                                          { key: 'settings', label: 'Configuración', icon: Settings },
-                                      ]
-                                    : [{ key: 'settings', label: 'Configuración', icon: Settings }]),
-                            ].map(({ key, label, icon: Icon }) => (
-                                <button
-                                    key={key}
-                                    onClick={() => {
-                                        setActiveTab(key as any);
-                                        if (key === 'favorites') {
-                                            fetchFavorites();
-                                        }
-                                    }}
-                                    className={`flex items-center space-x-2 rounded-lg px-4 py-2 font-medium transition-colors ${
-                                        activeTab === key
-                                            ? key === 'favorites'
-                                                ? 'bg-red-600 text-white'
-                                                : 'bg-purple-600 text-white'
-                                            : 'bg-white/10 text-gray-300 hover:bg-white/20 hover:text-white'
-                                    }`}
-                                >
-                                    <Icon size={18} />
-                                    <span>{label}</span>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+                    {/* Use DashboardNavigation for tab navigation */}
+                    <DashboardNavigation
+                        activeTab={activeTab}
+                        onTabChange={(tab: 'overview' | 'wallpapers' | 'favorites' | 'upload' | 'settings') => {
+                            if (tab === 'favorites') {
+                                setActiveTab('favorites');
+                                fetchFavorites();
+                            } else {
+                                setActiveTab(tab);
+                            }
+                        }}
+                    />
 
                     {/* Overview Tab with Analytics */}
                     {activeTab === 'overview' && (
@@ -260,38 +233,6 @@ export default function Dashboard({ auth, wallpapers = [], categories = [], stat
                     )}
                 </div>
             </div>
-
-            {/* Create Category Modal */}
-            <CreateCategoryModal
-                isOpen={showCreateCategory}
-                onClose={() => setShowCreateCategory(false)}
-                onSubmit={(formData) => {
-                    router.post(route('dashboard.categories.store'), formData, {
-                        onSuccess: (page) => {
-                            setShowCreateCategory(false);
-                            // Actualizar estado local con la nueva categoría
-                            const newCategories = (page.props.categories as Array<any>) || [];
-                            setCurrentCategories(newCategories);
-                            alert('Categoría creada exitosamente');
-                        },
-                        onError: (errors) => {
-                            console.error('Error al crear categoría:', errors);
-                            // Mostrar mensaje de error más específico
-                            if (errors.image) {
-                                alert('Error con la imagen: ' + errors.image);
-                            } else if (errors.name) {
-                                alert('Error con el nombre: ' + errors.name);
-                            } else {
-                                alert('Error al crear la categoría: ' + JSON.stringify(errors));
-                            }
-                        },
-                    });
-                }}
-                onSuccess={() => {
-                    // Reset form data when successful
-                    setCurrentCategories([...currentCategories]); // This will trigger a re-render
-                }}
-            />
         </>
     );
 }

@@ -1,23 +1,23 @@
-import { BarChart3, FolderOpen, Image, Upload } from 'lucide-react';
+import { BarChart3, Image, Settings, Star, Upload } from 'lucide-react';
 
 interface NavigationTab {
-    key: 'overview' | 'wallpapers' | 'upload' | 'categories' | 'analytics';
+    key: 'overview' | 'wallpapers' | 'favorites' | 'upload' | 'settings';
     label: string;
     icon: React.ElementType;
 }
 
 interface DashboardNavigationProps {
-    activeTab: 'overview' | 'wallpapers' | 'upload' | 'categories' | 'analytics';
-    onTabChange: (tab: 'overview' | 'wallpapers' | 'upload' | 'categories' | 'analytics') => void;
+    activeTab: 'overview' | 'wallpapers' | 'favorites' | 'upload' | 'settings';
+    onTabChange: (tab: 'overview' | 'wallpapers' | 'favorites' | 'upload' | 'settings') => void;
 }
 
 export default function DashboardNavigation({ activeTab, onTabChange }: DashboardNavigationProps) {
     const tabs: NavigationTab[] = [
         { key: 'overview', label: 'Resumen', icon: BarChart3 },
         { key: 'wallpapers', label: 'Wallpapers', icon: Image },
-        { key: 'upload', label: 'Subir Contenido', icon: Upload },
-        { key: 'categories', label: 'Categorías', icon: FolderOpen },
-        { key: 'analytics', label: 'Analíticas', icon: BarChart3 },
+        { key: 'favorites', label: 'Favoritos', icon: Star },
+        { key: 'upload', label: 'Subir', icon: Upload },
+        { key: 'settings', label: 'Configuración', icon: Settings },
     ];
 
     return (

@@ -1,4 +1,4 @@
-import { Filter, Search, Star } from 'lucide-react';
+import { Filter, Search } from 'lucide-react';
 import { useState } from 'react';
 
 interface WallpapersSectionProps {
@@ -72,13 +72,6 @@ export default function WallpapersSection({ auth, wallpapers = [], onDeleteWallp
                             <div className="relative">
                                 <img src={wallpaper.file_path} alt={wallpaper.title} className="h-48 w-full object-cover" />
                                 <div className="absolute top-2 right-2 flex space-x-1">
-                                    <button
-                                        onClick={() => onToggleFavorite?.(wallpaper.id)}
-                                        className="rounded-lg bg-black/50 p-2 text-yellow-400 backdrop-blur-sm transition-colors hover:bg-black/70"
-                                        title={wallpaper.is_favorited ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-                                    >
-                                        <Star className={`h-4 w-4 ${wallpaper.is_favorited ? 'fill-current' : ''}`} />
-                                    </button>
                                     {auth.is_admin && (
                                         <button
                                             onClick={() => onDeleteWallpaper(wallpaper.id)}

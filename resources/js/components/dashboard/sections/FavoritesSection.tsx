@@ -1,4 +1,4 @@
-import { Star } from 'lucide-react';
+import { Download, Eye, Heart, Star } from 'lucide-react';
 
 interface FavoritesSectionProps {
     auth: {
@@ -31,7 +31,7 @@ interface FavoritesSectionProps {
     onToggleFavorite: (wallpaperId: number) => void;
 }
 
-export default function FavoritesSection({ auth, favorites, loading, onToggleFavorite }: FavoritesSectionProps) {
+export default function FavoritesSection({ favorites, loading, onToggleFavorite }: FavoritesSectionProps) {
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -61,17 +61,20 @@ export default function FavoritesSection({ auth, favorites, loading, onToggleFav
                             </div>
                             <div className="p-4">
                                 <h3 className="mb-2 font-semibold text-white">{wallpaper.title}</h3>
-                                <p className="mb-3 text-sm text-gray-400">{wallpaper.category}</p>
+                                <p className="mb-3 text-sm text-gray-200">{wallpaper.category}</p>
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center space-x-4 text-sm text-gray-400">
-                                        <span>👁️ {wallpaper.views_count}</span>
-                                        <span>⬇️ {wallpaper.downloads_count}</span>
+                                        <span className="flex items-center space-x-1">
+                                            <Eye size={20} />
+                                            <span>{wallpaper.views_count}</span>
+                                        </span>
+                                        <span className="flex items-center space-x-1">
+                                            <Download size={20} />
+                                            <span>{wallpaper.downloads_count}</span>
+                                        </span>
                                     </div>
-                                    <button
-                                        onClick={() => onToggleFavorite(wallpaper.id)}
-                                        className="rounded-lg p-2 text-yellow-400 hover:bg-white/10"
-                                    >
-                                        <Star size={20} fill="currentColor" />
+                                    <button onClick={() => onToggleFavorite(wallpaper.id)} className="rounded-lg p-2 text-red-400 hover:bg-white/10">
+                                        <Heart size={20} fill="currentColor" />
                                     </button>
                                 </div>
                             </div>

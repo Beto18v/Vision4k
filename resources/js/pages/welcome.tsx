@@ -46,8 +46,8 @@ export default function Welcome({ wallpapers, categories, auth }: WelcomeProps) 
     const [selectedWallpaper, setSelectedWallpaper] = useState<Wallpaper | null>(null);
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [searchTerm, setSearchTerm] = useState<string>('');
-    const [viewMode, setViewMode] = useState<'grid' | 'masonry'>('grid');
-    const [sortBy, setSortBy] = useState<'newest' | 'popular' | 'name'>('newest');
+    const [viewMode, setViewMode] = useState<'grid' | 'masonry'>('masonry');
+    const [] = useState<'newest' | 'popular' | 'name'>('newest');
     // const [isLoading, setIsLoading] = useState(false);
 
     // Filtrar wallpapers basado en categoría y búsqueda

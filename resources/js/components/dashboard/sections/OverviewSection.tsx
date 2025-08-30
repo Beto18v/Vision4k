@@ -1,4 +1,7 @@
+import CreateCategoryModal from '@/components/dashboard/CreateCategoryModal';
+import { router } from '@inertiajs/react';
 import { Eye, FolderOpen, Plus, Upload } from 'lucide-react';
+import { useState } from 'react';
 
 interface OverviewSectionProps {
     auth: {
@@ -46,6 +49,8 @@ interface OverviewSectionProps {
 }
 
 export default function OverviewSection({ auth, categories = [], stats, analytics, onCreateCategory }: OverviewSectionProps) {
+    const [showCreateCategory, setShowCreateCategory] = useState(false);
+    const [currentCategories, setCurrentCategories] = useState(categories);
     // Usar datos reales o valores vacíos (no datos por defecto)
     const displayStats = stats || {
         total_wallpapers: 0,
@@ -60,6 +65,37 @@ export default function OverviewSection({ auth, categories = [], stats, analytic
 
     return (
         <div className="space-y-8">
+            {/* Modal para crear categoría */}
+            <CreateCategoryModal
+                isOpen={showCreateCategory}
+                onClose={() => setShowCreateCategory(false)}
+                onSubmit={(formData) => {
+                    router.post(route('dashboard.categories.store'), formData, {
+                        onSuccess: (page) => {
+                            setShowCreateCategory(false);
+                            // Actualizar estado local con la nueva categoría
+                            const newCategories = (page.props.categories as Array<any>) || [];
+                            setCurrentCategories(newCategories);
+                            alert('Categoría creada exitosamente');
+                        },
+                        onError: (errors) => {
+                            console.error('Error al crear categoría:', errors);
+                            // Mostrar mensaje de error más específico
+                            if (errors.image) {
+                                alert('Error con la imagen: ' + errors.image);
+                            } else if (errors.name) {
+                                alert('Error con el nombre: ' + errors.name);
+                            } else {
+                                alert('Error al crear la categoría: ' + JSON.stringify(errors));
+                            }
+                        },
+                    });
+                }}
+                onSuccess={() => {
+                    // Reset form data when successful
+                    setCurrentCategories([...currentCategories]); // This will trigger a re-render
+                }}
+            />
             {/* Stats Cards */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
                 <div className="rounded-xl border border-white/10 bg-black/20 p-6 backdrop-blur-sm transition-colors hover:bg-white/5">
@@ -119,13 +155,13 @@ export default function OverviewSection({ auth, categories = [], stats, analytic
             <div className="rounded-xl border border-white/10 bg-black/20 p-6 backdrop-blur-sm">
                 <div className="mb-6 flex items-center justify-between">
                     <h3 className="text-xl font-bold text-white">Categorías</h3>
-                    <button onClick={onCreateCategory} className="text-sm text-purple-400 hover:text-purple-300">
+                    <button onClick={() => setShowCreateCategory(true)} className="text-sm text-purple-400 hover:text-purple-300">
                         <Plus size={16} className="mr-1 inline" />
                         Agregar
                     </button>
                 </div>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {displayCategories.slice(0, 20).map((category) => (
+                    {currentCategories.slice(0, 20).map((category) => (
                         <div
                             key={category.id}
                             className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 p-4 transition-colors hover:bg-white/10"
