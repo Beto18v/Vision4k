@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface CreateCategoryModalProps {
     isOpen: boolean;
@@ -15,6 +15,13 @@ export default function CreateCategoryModal({ isOpen, onClose, onSubmit, onSucce
     });
     const [processing, setProcessing] = useState(false);
 
+    useEffect(() => {
+        if (isOpen) {
+            setProcessing(false);
+            setCategoryData({ name: '', image: null });
+        }
+    }, [isOpen]);
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setProcessing(true);
@@ -26,7 +33,7 @@ export default function CreateCategoryModal({ isOpen, onClose, onSubmit, onSucce
         }
 
         onSubmit(formData);
-        // No llamar onSuccess aquí - se hará desde el componente padre cuando sea exitoso
+        setProcessing(false);
     };
 
     if (!isOpen) return null;

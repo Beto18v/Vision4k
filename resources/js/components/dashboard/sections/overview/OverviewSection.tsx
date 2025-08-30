@@ -1,4 +1,4 @@
-import CreateCategoryModal from '@/components/dashboard/CreateCategoryModal';
+import CreateCategoryModal from '@/components/dashboard/sections/overview/modalcategory/CreateCategoryModal';
 import { router } from '@inertiajs/react';
 import { Eye, FolderOpen, Plus, Upload } from 'lucide-react';
 import { useState } from 'react';
@@ -67,6 +67,7 @@ export default function OverviewSection({ auth, categories = [], stats, analytic
         <div className="space-y-8">
             {/* Modal para crear categoría */}
             <CreateCategoryModal
+                key={showCreateCategory ? 'open' : 'closed'}
                 isOpen={showCreateCategory}
                 onClose={() => setShowCreateCategory(false)}
                 onSubmit={(formData) => {
@@ -174,10 +175,6 @@ export default function OverviewSection({ auth, categories = [], stats, analytic
                                     <h4 className="font-medium text-white">{category.name}</h4>
                                     <p className="text-sm text-gray-400">{category.wallpaper_count} wallpapers</p>
                                 </div>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-sm font-medium text-white">{category.total_downloads}</p>
-                                <p className="text-xs text-gray-400">descargas</p>
                             </div>
                         </div>
                     ))}
