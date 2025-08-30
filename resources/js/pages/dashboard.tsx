@@ -109,12 +109,28 @@ export default function Dashboard({ auth, wallpapers = [], categories = [], stat
     };
 
     const handleToggleFavorite = (wallpaperId: number) => {
+        // Optimistically update UI
+        setFavorites((prev) => prev.filter((f) => f.id !== wallpaperId));
+        setCurrentWallpapers((prev) => prev.map((w) => (w.id === wallpaperId ? { ...w, is_favorited: !w.is_favorited } : w)));
+
         router.post(
             route('wallpapers.favorite', wallpaperId),
             {},
             {
+                onSuccess: () => {
+                    // Refetch favorites if on favorites tab
+                    if (activeTab === 'favorites') {
+                        fetchFavorites();
+                    }
+                },
                 onError: (errors) => {
                     console.error('Error toggling favorite:', errors);
+                    // Revert update on error
+                    setFavorites((prev) => {
+                        fetchFavorites();
+                        return prev;
+                    });
+                    setCurrentWallpapers((prev) => prev.map((w) => (w.id === wallpaperId ? { ...w, is_favorited: !w.is_favorited } : w)));
                 },
             },
         );

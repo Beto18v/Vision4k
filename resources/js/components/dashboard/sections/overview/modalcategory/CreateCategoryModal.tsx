@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface CreateCategoryModalProps {
     isOpen: boolean;
