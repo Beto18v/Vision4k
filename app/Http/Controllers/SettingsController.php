@@ -3,9 +3,9 @@
 /**
  * Controlador Settings - Gestiona configuración de usuario en Vision4K
  *
- * Funcionalidades: perfil, contraseña, eliminación de cuenta, avatar
+ * Funcionalidades: perfil, contraseña, eliminación de cuenta
  * Métodos: index(), updateProfile(), updatePassword(), destroy()
- * Características: validación de datos, manejo de archivos, eliminación en cascada
+ * Características: validación de datos, eliminación en cascada
  */
 
 namespace App\Http\Controllers;
@@ -20,13 +20,11 @@ use Inertia\Inertia;
 class SettingsController extends Controller
 {
     /**
-     * Mostrar página de configuración
+     * Mostrar página de configuración (redirige al dashboard)
      */
     public function index()
     {
-        return Inertia::render('settings/index', [
-            'user' => Auth::user(),
-        ]);
+        return redirect('/dashboard?tab=settings');
     }
 
     /**
@@ -39,20 +37,7 @@ class SettingsController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
-
-        // Manejar subida de avatar
-        if ($request->hasFile('avatar')) {
-            // Eliminar avatar anterior si existe
-            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
-                Storage::disk('public')->delete($user->avatar);
-            }
-
-            // Guardar nuevo avatar
-            $avatarPath = $request->file('avatar')->store('avatars', 'public');
-            $validated['avatar'] = $avatarPath;
-        }
 
         $user->update($validated);
 
@@ -76,7 +61,6 @@ class SettingsController extends Controller
 
         return back()->with('success', 'Contraseña cambiada correctamente.');
     }
-
     /**
      * Eliminar cuenta del usuario
      */
@@ -87,11 +71,6 @@ class SettingsController extends Controller
         ]);
 
         $user = Auth::user();
-
-        // Eliminar avatar si existe
-        if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
-            Storage::disk('public')->delete($user->avatar);
-        }
 
         // Cerrar sesión
         Auth::logout();

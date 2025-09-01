@@ -1,4 +1,4 @@
-import { Lock, Monitor, Moon, Save, Settings, Sun, Trash2, User } from 'lucide-react';
+import { Lock, Save, Trash2, User } from 'lucide-react';
 import React, { useState } from 'react';
 
 interface SettingsSectionProps {
@@ -11,22 +11,25 @@ interface SettingsSectionProps {
         role: string;
         is_admin: boolean;
     };
-    onProfileSubmit: (formData: FormData) => void;
-    onPasswordSubmit: (data: { current_password: string; password: string; password_confirmation: string }) => void;
-    onDeleteAccount: (password: string) => void;
+    onProfileSubmit: (data: { name: string; email: string }, callbacks?: { onSuccess?: () => void; onError?: (error?: string) => void }) => void;
+    onPasswordSubmit: (
+        data: { current_password: string; password: string; password_confirmation: string },
+        callbacks?: { onSuccess?: () => void; onError?: (error?: string) => void },
+    ) => void;
+    onDeleteAccount: (password: string, callbacks?: { onSuccess?: () => void; onError?: (error?: string) => void }) => void;
 }
 
 export default function SettingsSection({ auth, onProfileSubmit, onPasswordSubmit, onDeleteAccount }: SettingsSectionProps) {
-    const [settingsTab, setSettingsTab] = useState<'profile' | 'password' | 'appearance' | 'account'>('profile');
-    const [appearance, setAppearance] = useState<'light' | 'dark' | 'system'>('system');
+    const [settingsTab, setSettingsTab] = useState<'profile' | 'password' | 'account'>('profile');
 
     // Profile form state
     const [profileData, setProfileData] = useState({
         name: auth.user.name,
         email: auth.user.email,
-        avatar: null as File | null,
     });
     const [profileProcessing, setProfileProcessing] = useState(false);
+    const [profileSuccess, setProfileSuccess] = useState(false);
+    const [profileError, setProfileError] = useState<string | null>(null);
 
     // Password form state
     const [passwordData, setPasswordData] = useState({
@@ -35,58 +38,84 @@ export default function SettingsSection({ auth, onProfileSubmit, onPasswordSubmi
         password_confirmation: '',
     });
     const [passwordProcessing, setPasswordProcessing] = useState(false);
+    const [passwordSuccess, setPasswordSuccess] = useState(false);
+    const [passwordError, setPasswordError] = useState<string | null>(null);
 
     // Delete account form state
     const [deleteData, setDeleteData] = useState({
         password: '',
     });
     const [deleteProcessing, setDeleteProcessing] = useState(false);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
 
     // Handlers para formularios de configuración
     const handleProfileSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setProfileProcessing(true);
+        setProfileError(null);
 
-        const formData = new FormData();
-        formData.append('name', profileData.name);
-        formData.append('email', profileData.email);
-        if (profileData.avatar) {
-            formData.append('avatar', profileData.avatar);
-        }
+        const data = {
+            name: profileData.name,
+            email: profileData.email,
+        };
 
-        onProfileSubmit(formData);
-        setProfileProcessing(false);
-        setProfileData((prev) => ({ ...prev, avatar: null }));
-        // Limpiar input de archivo
-        const fileInput = document.getElementById('avatar-upload') as HTMLInputElement;
-        if (fileInput) {
-            fileInput.value = '';
-        }
+        onProfileSubmit(data, {
+            onSuccess: () => {
+                setProfileProcessing(false);
+                setProfileSuccess(true);
+                setTimeout(() => setProfileSuccess(false), 3000);
+            },
+            onError: (error?: string) => {
+                setProfileProcessing(false);
+                setProfileError(error || 'Error al actualizar el perfil');
+                setTimeout(() => setProfileError(null), 5000);
+            },
+        });
     };
 
     const handlePasswordSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setPasswordProcessing(true);
+        setPasswordError(null); // Limpiar errores previos
 
-        onPasswordSubmit(passwordData);
-        setPasswordProcessing(false);
-        setPasswordData({
-            current_password: '',
-            password: '',
-            password_confirmation: '',
+        onPasswordSubmit(passwordData, {
+            onSuccess: () => {
+                setPasswordProcessing(false);
+                setPasswordSuccess(true);
+                setTimeout(() => setPasswordSuccess(false), 3000);
+                setPasswordData({
+                    current_password: '',
+                    password: '',
+                    password_confirmation: '',
+                });
+            },
+            onError: (error?: string) => {
+                setPasswordProcessing(false);
+                setPasswordError(error || 'Error al cambiar la contraseña');
+                setTimeout(() => setPasswordError(null), 5000);
+            },
         });
     };
 
     const handleDeleteAccount = (e: React.FormEvent) => {
         e.preventDefault();
+        setDeleteError(null); // Limpiar errores previos
 
         if (confirm('¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer.')) {
             setDeleteProcessing(true);
-            onDeleteAccount(deleteData.password);
-            setDeleteProcessing(false);
+
+            onDeleteAccount(deleteData.password, {
+                onSuccess: () => {
+                    setDeleteProcessing(false);
+                },
+                onError: (error?: string) => {
+                    setDeleteProcessing(false);
+                    setDeleteError(error || 'Error al eliminar la cuenta. Verifica tu contraseña.');
+                    setTimeout(() => setDeleteError(null), 5000);
+                },
+            });
         }
     };
-
     return (
         <div className="space-y-6">
             {/* Settings Navigation - Integrated */}
@@ -108,15 +137,6 @@ export default function SettingsSection({ auth, onProfileSubmit, onPasswordSubmi
                 >
                     <Lock className="h-4 w-4" />
                     <span>Contraseña</span>
-                </button>
-                <button
-                    onClick={() => setSettingsTab('appearance')}
-                    className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                        settingsTab === 'appearance' ? 'bg-purple-600 text-white' : 'bg-white/10 text-gray-300 hover:bg-white/20 hover:text-white'
-                    }`}
-                >
-                    <Settings className="h-4 w-4" />
-                    <span>Apariencia</span>
                 </button>
                 <button
                     onClick={() => setSettingsTab('account')}
@@ -170,6 +190,18 @@ export default function SettingsSection({ auth, onProfileSubmit, onPasswordSubmi
                             <Save className="h-4 w-4" />
                             <span>{profileProcessing ? 'Guardando...' : 'Guardar Cambios'}</span>
                         </button>
+
+                        {profileSuccess && (
+                            <div className="rounded-xl border border-green-500/20 bg-green-500/10 p-4 text-green-400">
+                                <p className="text-sm">✅ Perfil actualizado correctamente</p>
+                            </div>
+                        )}
+
+                        {profileError && (
+                            <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-400">
+                                <p className="text-sm">❌ {profileError}</p>
+                            </div>
+                        )}
                     </form>
                 </div>
             )}
@@ -226,62 +258,19 @@ export default function SettingsSection({ auth, onProfileSubmit, onPasswordSubmi
                             <Save className="h-4 w-4" />
                             <span>{passwordProcessing ? 'Actualizando...' : 'Actualizar Contraseña'}</span>
                         </button>
+
+                        {passwordSuccess && (
+                            <div className="rounded-xl border border-green-500/20 bg-green-500/10 p-4 text-green-400">
+                                <p className="text-sm">✅ Contraseña actualizada correctamente</p>
+                            </div>
+                        )}
+
+                        {passwordError && (
+                            <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-400">
+                                <p className="text-sm">❌ {passwordError}</p>
+                            </div>
+                        )}
                     </form>
-                </div>
-            )}
-
-            {/* Appearance Settings */}
-            {settingsTab === 'appearance' && (
-                <div className="rounded-xl border border-white/10 bg-black/20 p-6 backdrop-blur-sm">
-                    <div className="mb-6 flex items-center space-x-3">
-                        <Settings className="h-5 w-5 text-purple-400" />
-                        <h3 className="text-lg font-semibold text-white">Apariencia</h3>
-                    </div>
-
-                    <div className="rounded-xl border border-white/10 bg-white/5 p-6">
-                        <p className="mb-4 text-sm text-gray-400">
-                            Elige cómo quieres que se vea la aplicación. Puedes elegir entre modo claro, oscuro o seguir la configuración de tu
-                            sistema.
-                        </p>
-
-                        <div className="flex items-center space-x-4">
-                            <button
-                                onClick={() => setAppearance('light')}
-                                className={`flex items-center space-x-2 rounded-lg border px-4 py-2 transition-colors ${
-                                    appearance === 'light'
-                                        ? 'border-purple-500 bg-purple-500/20 text-white'
-                                        : 'border-white/20 bg-white/5 text-gray-400 hover:bg-white/10'
-                                }`}
-                            >
-                                <Sun className="h-4 w-4" />
-                                <span>Claro</span>
-                            </button>
-
-                            <button
-                                onClick={() => setAppearance('dark')}
-                                className={`flex items-center space-x-2 rounded-lg border px-4 py-2 transition-colors ${
-                                    appearance === 'dark'
-                                        ? 'border-purple-500 bg-purple-500/20 text-white'
-                                        : 'border-white/20 bg-white/5 text-gray-400 hover:bg-white/10'
-                                }`}
-                            >
-                                <Moon className="h-4 w-4" />
-                                <span>Oscuro</span>
-                            </button>
-
-                            <button
-                                onClick={() => setAppearance('system')}
-                                className={`flex items-center space-x-2 rounded-lg border px-4 py-2 transition-colors ${
-                                    appearance === 'system'
-                                        ? 'border-purple-500 bg-purple-500/20 text-white'
-                                        : 'border-white/20 bg-white/5 text-gray-400 hover:bg-white/10'
-                                }`}
-                            >
-                                <Monitor className="h-4 w-4" />
-                                <span>Sistema</span>
-                            </button>
-                        </div>
-                    </div>
                 </div>
             )}
 
@@ -322,6 +311,12 @@ export default function SettingsSection({ auth, onProfileSubmit, onPasswordSubmi
                                 <Trash2 className="h-4 w-4" />
                                 <span>{deleteProcessing ? 'Eliminando...' : 'Eliminar Cuenta'}</span>
                             </button>
+
+                            {deleteError && (
+                                <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-400">
+                                    <p className="text-sm">❌ {deleteError}</p>
+                                </div>
+                            )}
                         </form>
                     </div>
                 </div>

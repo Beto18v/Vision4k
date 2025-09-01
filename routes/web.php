@@ -23,9 +23,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Settings routes
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
-    Route::put('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.profile.update');
-    Route::put('/settings/password', [SettingsController::class, 'updatePassword'])->name('settings.password.update');
-    Route::delete('/settings/account', [SettingsController::class, 'destroy'])->name('settings.account.destroy');
+    Route::patch('/settings/profile', [SettingsController::class, 'updateProfile'])->name('profile.update');
+    Route::put('/settings/password', [SettingsController::class, 'updatePassword'])->name('password.update');
+    Route::delete('/settings/profile', [SettingsController::class, 'destroy'])->name('profile.destroy');
 
     // Category management routes
     Route::resource('categories', CategoryController::class);

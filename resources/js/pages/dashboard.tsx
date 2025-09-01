@@ -220,30 +220,45 @@ export default function Dashboard({ auth, wallpapers = [], categories = [], stat
                     {activeTab === 'settings' && (
                         <SettingsSection
                             auth={auth}
-                            onProfileSubmit={(formData) => {
-                                router.post(route('settings.profile.update'), formData, {
+                            onProfileSubmit={(data, callbacks) => {
+                                router.patch(route('profile.update'), data, {
                                     onSuccess: () => {
-                                        // Limpiar input de archivo
-                                        const fileInput = document.getElementById('avatar-upload') as HTMLInputElement;
-                                        if (fileInput) {
-                                            fileInput.value = '';
-                                        }
+                                        // Profile updated successfully
+                                        callbacks?.onSuccess?.();
+                                        // Reload the page to get updated user data
+                                        router.reload({ only: ['auth'] });
+                                    },
+                                    onError: (errors) => {
+                                        const errorMessage = Object.values(errors).flat().join(', ') || 'Error al actualizar el perfil';
+                                        callbacks?.onError?.(errorMessage);
                                     },
                                 });
                             }}
-                            onPasswordSubmit={(data) => {
-                                router.put(route('settings.password.update'), data, {
+                            onPasswordSubmit={(data, callbacks) => {
+                                router.put(route('password.update'), data, {
                                     onSuccess: () => {
-                                        // Reset form data is handled in the component
+                                        // Password updated successfully
+                                        callbacks?.onSuccess?.();
+                                    },
+                                    onError: (errors) => {
+                                        const errorMessage = Object.values(errors).flat().join(', ') || 'Error al cambiar la contraseña';
+                                        callbacks?.onError?.(errorMessage);
                                     },
                                 });
                             }}
-                            onDeleteAccount={(password) => {
-                                if (confirm('¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer.')) {
-                                    router.delete(route('settings.account.destroy'), {
-                                        data: { password },
-                                    });
-                                }
+                            onDeleteAccount={(password, callbacks) => {
+                                router.delete(route('profile.destroy'), {
+                                    data: { password },
+                                    onSuccess: () => {
+                                        callbacks?.onSuccess?.();
+                                        // User will be redirected by the controller
+                                    },
+                                    onError: (errors) => {
+                                        const errorMessage =
+                                            Object.values(errors).flat().join(', ') || 'Error al eliminar la cuenta. Verifica tu contraseña.';
+                                        callbacks?.onError?.(errorMessage);
+                                    },
+                                });
                             }}
                         />
                     )}

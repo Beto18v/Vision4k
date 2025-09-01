@@ -4,14 +4,14 @@ use App\Models\User;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
-test('profile page is displayed', function () {
+test('profile page redirects to dashboard', function () {
     $user = User::factory()->create();
 
     $response = $this
         ->actingAs($user)
-        ->get('/settings/profile');
+        ->get('/settings');
 
-    $response->assertOk();
+    $response->assertRedirect('/dashboard?tab=settings');
 });
 
 test('profile information can be updated', function () {
@@ -26,7 +26,7 @@ test('profile information can be updated', function () {
 
     $response
         ->assertSessionHasNoErrors()
-        ->assertRedirect('/settings/profile');
+        ->assertRedirect();
 
     $user->refresh();
 
@@ -47,7 +47,7 @@ test('email verification status is unchanged when the email address is unchanged
 
     $response
         ->assertSessionHasNoErrors()
-        ->assertRedirect('/settings/profile');
+        ->assertRedirect();
 
     expect($user->refresh()->email_verified_at)->not->toBeNull();
 });
@@ -74,14 +74,14 @@ test('correct password must be provided to delete account', function () {
 
     $response = $this
         ->actingAs($user)
-        ->from('/settings/profile')
+        ->from('/dashboard')
         ->delete('/settings/profile', [
             'password' => 'wrong-password',
         ]);
 
     $response
         ->assertSessionHasErrors('password')
-        ->assertRedirect('/settings/profile');
+        ->assertRedirect('/dashboard');
 
     expect($user->fresh())->not->toBeNull();
 });
