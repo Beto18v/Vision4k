@@ -367,7 +367,7 @@ class DashboardController extends Controller
                         'file_path' => str_starts_with($wallpaper->file_path, 'http')
                             ? $wallpaper->file_path
                             : Storage::url($wallpaper->file_path),
-                        'category' => $wallpaper->category->name ?? 'Sin categoría',
+                        'category' => $wallpaper->category?->name ?? 'Sin categoría',
                         'downloads_count' => $wallpaper->downloads_count,
                         'views_count' => $wallpaper->views_count ?? 0,
                         'created_at' => $wallpaper->created_at->format('Y-m-d'),

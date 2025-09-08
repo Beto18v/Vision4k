@@ -97,8 +97,10 @@ export default function Dashboard({ auth, wallpapers = [], categories = [], stat
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        setCurrentWallpapers(wallpapers);
-    }, [wallpapers]);
+        if (activeTab === 'favorites') {
+            fetchFavorites();
+        }
+    }, [activeTab]);
 
     const handleDeleteWallpaper = (wallpaperId: number) => {
         if (confirm('¿Estás seguro de que quieres eliminar este wallpaper?')) {
