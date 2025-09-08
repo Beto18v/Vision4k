@@ -126,14 +126,14 @@ export default function WallpaperGrid({ wallpapers, viewMode, onWallpaperClick, 
                         <div className="absolute top-2 right-2 flex translate-y-2 transform space-x-2 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
                             <button
                                 className={`group/btn rounded-full p-2 backdrop-blur-sm transition-all duration-300 ${
-                                    wallpaper.is_favorited ? 'bg-yellow-600/80 hover:bg-yellow-600' : 'bg-white/20 hover:bg-white/30'
+                                    wallpaper.is_favorited ? 'bg-red-600/80 hover:bg-red-600' : 'bg-red-500/20 hover:bg-red-500/30'
                                 }`}
                                 title={wallpaper.is_favorited ? 'Quitar de favoritos' : 'Agregar a favoritos'}
                                 onClick={(e) => handleToggleFavorite(wallpaper.id, e)}
                             >
                                 <svg
                                     className={`h-4 w-4 transition-transform group-hover/btn:scale-110 ${
-                                        wallpaper.is_favorited ? 'text-white' : 'text-white/80'
+                                        wallpaper.is_favorited ? 'text-red-500' : 'text-red-500'
                                     }`}
                                     fill={wallpaper.is_favorited ? 'currentColor' : 'none'}
                                     stroke="currentColor"
