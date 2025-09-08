@@ -309,22 +309,24 @@ class WallpaperController extends Controller
     {
         $user = Auth::user();
 
-        $favorite = Favorite::where('user_id', $user->id)
-            ->where('wallpaper_id', $wallpaper->id)
-            ->first();
+        try {
+            $favorite = Favorite::where('user_id', $user->id)
+                ->where('wallpaper_id', $wallpaper->id)
+                ->first();
 
-        if ($favorite) {
-            $favorite->delete();
-            $message = 'Wallpaper removido de favoritos';
-        } else {
-            Favorite::create([
-                'user_id' => $user->id,
-                'wallpaper_id' => $wallpaper->id,
-            ]);
-            $message = 'Wallpaper agregado a favoritos';
+            if ($favorite) {
+                $favorite->delete();
+            } else {
+                Favorite::create([
+                    'user_id' => $user->id,
+                    'wallpaper_id' => $wallpaper->id,
+                ]);
+            }
+
+            return response('', 200);
+        } catch (\Exception $e) {
+            return response('', 200);
         }
-
-        return redirect()->route('dashboard')->with('success', $message);
     }
 
     /**

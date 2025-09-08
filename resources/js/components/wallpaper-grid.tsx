@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 
 interface Wallpaper {
     id: number;
@@ -25,8 +26,14 @@ interface WallpaperGridProps {
 }
 
 export default function WallpaperGrid({ wallpapers, viewMode, onWallpaperClick, auth }: WallpaperGridProps) {
+    const [localWallpapers, setLocalWallpapers] = useState(wallpapers);
+
+    useEffect(() => {
+        setLocalWallpapers(wallpapers);
+    }, [wallpapers]);
     // Función para manejar favoritos
     const handleToggleFavorite = (wallpaperId: number, e: React.MouseEvent) => {
+        e.preventDefault();
         e.stopPropagation(); // Evitar que se abra el modal
 
         if (!auth?.user) {
@@ -35,13 +42,17 @@ export default function WallpaperGrid({ wallpapers, viewMode, onWallpaperClick, 
             return;
         }
 
+        const scrollY = window.scrollY; // Guardar la posición del scroll
+
         router.post(
             `/wallpapers/${wallpaperId}/favorite`,
             {},
             {
                 onSuccess: () => {
-                    // Actualizar el estado local - esto se manejará en el componente padre
-                    window.location.reload(); // Temporal, hasta que se implemente el estado global
+                    // Actualizar el estado local para mostrar el cambio en tiempo real
+                    setLocalWallpapers((prev) => prev.map((w) => (w.id === wallpaperId ? { ...w, is_favorited: !w.is_favorited } : w)));
+                    // Restaurar la posición del scroll
+                    window.scrollTo(0, scrollY);
                 },
                 onError: (errors) => {
                     console.error('Error al actualizar favorito:', errors);
@@ -54,7 +65,7 @@ export default function WallpaperGrid({ wallpapers, viewMode, onWallpaperClick, 
         <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
             <div className="mb-6 flex flex-col justify-between sm:flex-row sm:items-center">
                 <div className="flex items-center space-x-4 text-gray-300">
-                    <span className="text-sm">{wallpapers.length} wallpapers encontrados</span>
+                    <span className="text-sm">{localWallpapers.length} wallpapers encontrados</span>
                 </div>
             </div>
 
@@ -66,7 +77,7 @@ export default function WallpaperGrid({ wallpapers, viewMode, onWallpaperClick, 
                         : 'columns-1 gap-6 space-y-6 sm:columns-2 md:columns-3 lg:columns-4'
                 } `}
             >
-                {wallpapers.map((wallpaper, index) => (
+                {localWallpapers.map((wallpaper, index) => (
                     <div
                         key={wallpaper.id}
                         className={`group relative cursor-pointer overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm transition-all duration-500 animate-in fade-in slide-in-from-bottom-4 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/25 ${
@@ -125,9 +136,7 @@ export default function WallpaperGrid({ wallpapers, viewMode, onWallpaperClick, 
                         {/* Botones de acción mejorados */}
                         <div className="absolute top-2 right-2 flex translate-y-2 transform space-x-2 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
                             <button
-                                className={`group/btn rounded-full p-2 backdrop-blur-sm transition-all duration-300 ${
-                                    wallpaper.is_favorited ? 'bg-red-600/80 hover:bg-red-600' : 'bg-red-500/20 hover:bg-red-500/30'
-                                }`}
+                                className="group/btn rounded-full bg-red-500/20 p-2 backdrop-blur-sm transition-all duration-300 hover:bg-red-500/30"
                                 title={wallpaper.is_favorited ? 'Quitar de favoritos' : 'Agregar a favoritos'}
                                 onClick={(e) => handleToggleFavorite(wallpaper.id, e)}
                             >
@@ -188,7 +197,7 @@ export default function WallpaperGrid({ wallpapers, viewMode, onWallpaperClick, 
             </div>
 
             {/* Mensaje cuando no hay resultados */}
-            {wallpapers.length === 0 && (
+            {localWallpapers.length === 0 && (
                 <div className="py-12 text-center">
                     <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-white/10">
                         <svg className="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
