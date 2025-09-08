@@ -1,20 +1,11 @@
 import { type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 
-interface User {
-    id: number;
-    name: string;
-    email: string;
-    is_premium?: boolean;
-    premium_expires_at?: string;
-}
-
 interface HeaderProps {
     currentPage?: 'home';
-    user?: User;
 }
 
-export default function Header({ currentPage = 'home', user }: HeaderProps) {
+export default function Header({ currentPage = 'home' }: HeaderProps) {
     const { auth } = usePage<SharedData>().props;
     const isPremiumUser = auth.user?.is_premium || false;
 

@@ -5,10 +5,9 @@ interface CreateCategoryModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSubmit: (formData: FormData) => void;
-    onSuccess?: () => void;
 }
 
-export default function CreateCategoryModal({ isOpen, onClose, onSubmit, onSuccess }: CreateCategoryModalProps) {
+export default function CreateCategoryModal({ isOpen, onClose, onSubmit }: CreateCategoryModalProps) {
     const [categoryData, setCategoryData] = useState({
         name: '',
         image: null as File | null,

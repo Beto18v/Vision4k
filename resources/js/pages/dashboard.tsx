@@ -6,7 +6,25 @@ import SettingsSection from '@/components/dashboard/sections/SettingsSection';
 import UploadSection from '@/components/dashboard/sections/UploadSection';
 import WallpapersSection from '@/components/dashboard/sections/WallpapersSection';
 import { Head, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
+interface Favorite {
+    id: number;
+    title: string;
+    description: string;
+    file_path: string;
+    category: string;
+    downloads_count: number;
+    views_count: number;
+    created_at: string;
+    is_featured: boolean;
+    is_active: boolean;
+    is_premium: boolean;
+    is_favorited: boolean;
+    user?: {
+        name: string;
+    };
+}
 
 interface DashboardProps {
     auth: {
@@ -70,12 +88,17 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ auth, wallpapers = [], categories = [], stats, analytics }: DashboardProps) {
-    const [activeTab, setActiveTab] = useState<'overview' | 'wallpapers' | 'favorites' | 'upload' | 'settings'>('overview');
-    const [showCreateCategory, setShowCreateCategory] = useState(false);
-    const [currentCategories, setCurrentCategories] = useState(categories);
+    const [activeTab, setActiveTab] = useState<'overview' | 'wallpapers' | 'favorites' | 'upload' | 'settings'>(
+        (localStorage.getItem('activeTab') as 'overview' | 'wallpapers' | 'favorites' | 'upload' | 'settings') ||
+            (auth.is_admin ? 'overview' : 'favorites'),
+    );
     const [currentWallpapers, setCurrentWallpapers] = useState(wallpapers);
-    const [favorites, setFavorites] = useState<Array<any>>([]);
+    const [favorites, setFavorites] = useState<Array<Favorite>>([]);
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        setCurrentWallpapers(wallpapers);
+    }, [wallpapers]);
 
     const handleDeleteWallpaper = (wallpaperId: number) => {
         if (confirm('¿Estás seguro de que quieres eliminar este wallpaper?')) {
@@ -83,6 +106,8 @@ export default function Dashboard({ auth, wallpapers = [], categories = [], stat
                 onSuccess: () => {
                     // Actualizar estado local en lugar de recargar página
                     setCurrentWallpapers((prev) => prev.filter((w) => w.id !== wallpaperId));
+                    // Actualizar estadísticas
+                    router.reload({ only: ['stats'] });
                 },
                 onError: (errors) => {
                     console.error('Error al eliminar:', errors);
@@ -151,20 +176,19 @@ export default function Dashboard({ auth, wallpapers = [], categories = [], stat
                     <DashboardNavigation
                         activeTab={activeTab}
                         onTabChange={(tab: 'overview' | 'wallpapers' | 'favorites' | 'upload' | 'settings') => {
+                            setActiveTab(tab);
+                            localStorage.setItem('activeTab', tab);
                             if (tab === 'favorites') {
-                                setActiveTab('favorites');
                                 fetchFavorites();
-                            } else {
-                                setActiveTab(tab);
                             }
                         }}
+                        auth={auth}
                     />
 
                     {/* Overview Tab with Analytics */}
                     {activeTab === 'overview' && (
                         <OverviewSection
-                            auth={auth}
-                            categories={currentCategories || []}
+                            categories={categories || []}
                             stats={
                                 stats || {
                                     total_wallpapers: 0,
@@ -176,21 +200,19 @@ export default function Dashboard({ auth, wallpapers = [], categories = [], stat
                                 }
                             }
                             analytics={analytics}
-                            onCreateCategory={() => setShowCreateCategory(true)}
                         />
                     )}
 
                     {/* Upload Tab */}
                     {activeTab === 'upload' && (
                         <UploadSection
-                            auth={auth}
-                            categories={currentCategories || []}
+                            categories={categories || []}
                             onSubmit={(formData) => {
                                 router.post(route('dashboard.store'), formData, {
                                     onSuccess: () => {
                                         alert('Wallpaper(s) subido(s) exitosamente');
-                                        // Actualizar estado local en lugar de recargar
-                                        router.reload();
+                                        // Recargar solo las props necesarias sin cambiar la pestaña
+                                        router.reload({ only: ['wallpapers', 'stats', 'categories'] });
                                     },
                                     onError: (errors) => {
                                         console.error('Error:', errors);
@@ -208,12 +230,7 @@ export default function Dashboard({ auth, wallpapers = [], categories = [], stat
 
                     {/* Wallpapers Management */}
                     {activeTab === 'wallpapers' && (
-                        <WallpapersSection
-                            auth={auth}
-                            wallpapers={currentWallpapers || []}
-                            onDeleteWallpaper={handleDeleteWallpaper}
-                            onToggleFavorite={handleToggleFavorite}
-                        />
+                        <WallpapersSection auth={auth} wallpapers={currentWallpapers || []} onDeleteWallpaper={handleDeleteWallpaper} />
                     )}
 
                     {/* Settings Tab */}

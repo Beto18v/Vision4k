@@ -9,16 +9,21 @@ interface NavigationTab {
 interface DashboardNavigationProps {
     activeTab: 'overview' | 'wallpapers' | 'favorites' | 'upload' | 'settings';
     onTabChange: (tab: 'overview' | 'wallpapers' | 'favorites' | 'upload' | 'settings') => void;
+    auth: {
+        is_admin: boolean;
+    };
 }
 
-export default function DashboardNavigation({ activeTab, onTabChange }: DashboardNavigationProps) {
-    const tabs: NavigationTab[] = [
+export default function DashboardNavigation({ activeTab, onTabChange, auth }: DashboardNavigationProps) {
+    const allTabs: NavigationTab[] = [
         { key: 'overview', label: 'Resumen', icon: BarChart3 },
         { key: 'wallpapers', label: 'Wallpapers', icon: Image },
         { key: 'favorites', label: 'Favoritos', icon: Star },
         { key: 'upload', label: 'Subir', icon: Upload },
         { key: 'settings', label: 'Configuración', icon: Settings },
     ];
+
+    const tabs = auth.is_admin ? allTabs : allTabs.filter((tab) => tab.key === 'favorites' || tab.key === 'settings');
 
     return (
         <div className="mb-8">

@@ -29,10 +29,9 @@ interface WallpapersSectionProps {
         };
     }>;
     onDeleteWallpaper: (wallpaperId: number) => void;
-    onToggleFavorite?: (wallpaperId: number) => void;
 }
 
-export default function WallpapersSection({ auth, wallpapers = [], onDeleteWallpaper, onToggleFavorite }: WallpapersSectionProps) {
+export default function WallpapersSection({ auth, wallpapers = [], onDeleteWallpaper }: WallpapersSectionProps) {
     const [searchTerm, setSearchTerm] = useState('');
 
     const displayWallpapers = wallpapers || [];

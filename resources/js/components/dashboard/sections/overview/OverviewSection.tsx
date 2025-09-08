@@ -3,16 +3,16 @@ import { router } from '@inertiajs/react';
 import { Eye, FolderOpen, Plus, Upload } from 'lucide-react';
 import { useState } from 'react';
 
+interface Category {
+    id: number;
+    name: string;
+    slug: string;
+    wallpaper_count: number;
+    total_downloads: number;
+    image_url: string;
+}
+
 interface OverviewSectionProps {
-    auth: {
-        user: {
-            id: number;
-            name: string;
-            email: string;
-        };
-        role: string;
-        is_admin: boolean;
-    };
     categories?: Array<{
         id: number;
         name: string;
@@ -45,10 +45,9 @@ interface OverviewSectionProps {
             count: number;
         }>;
     };
-    onCreateCategory: () => void;
 }
 
-export default function OverviewSection({ auth, categories = [], stats, analytics, onCreateCategory }: OverviewSectionProps) {
+export default function OverviewSection({ categories = [], stats, analytics }: OverviewSectionProps) {
     const [showCreateCategory, setShowCreateCategory] = useState(false);
     const [currentCategories, setCurrentCategories] = useState(categories);
     // Usar datos reales o valores vacíos (no datos por defecto)
@@ -75,7 +74,7 @@ export default function OverviewSection({ auth, categories = [], stats, analytic
                         onSuccess: (page) => {
                             setShowCreateCategory(false);
                             // Actualizar estado local con la nueva categoría
-                            const newCategories = (page.props.categories as Array<any>) || [];
+                            const newCategories = (page.props.categories as Array<Category>) || [];
                             setCurrentCategories(newCategories);
                             alert('Categoría creada exitosamente');
                         },
@@ -91,10 +90,6 @@ export default function OverviewSection({ auth, categories = [], stats, analytic
                             }
                         },
                     });
-                }}
-                onSuccess={() => {
-                    // Reset form data when successful
-                    setCurrentCategories([...currentCategories]); // This will trigger a re-render
                 }}
             />
             {/* Stats Cards */}

@@ -2,15 +2,6 @@ import { Upload } from 'lucide-react';
 import React, { useState } from 'react';
 
 interface UploadSectionProps {
-    auth: {
-        user: {
-            id: number;
-            name: string;
-            email: string;
-        };
-        role: string;
-        is_admin: boolean;
-    };
     categories?: Array<{
         id: number;
         name: string;
@@ -22,7 +13,7 @@ interface UploadSectionProps {
     onSubmit: (formData: FormData) => void;
 }
 
-export default function UploadSection({ auth, categories = [], onSubmit }: UploadSectionProps) {
+export default function UploadSection({ categories = [], onSubmit }: UploadSectionProps) {
     const [uploadFiles, setUploadFiles] = useState<FileList | null>(null);
     const [dragActive, setDragActive] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -102,7 +93,7 @@ export default function UploadSection({ auth, categories = [], onSubmit }: Uploa
         formData.append('category_id', categoryId);
 
         // Añadir archivos
-        Array.from(uploadFiles).forEach((file, index) => {
+        Array.from(uploadFiles).forEach((file) => {
             formData.append('files[]', file);
         });
 

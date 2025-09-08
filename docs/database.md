@@ -2,18 +2,18 @@
 
 ## 🎯 Recomendación: PostgreSQL
 
-### ¿Por qué PostgreSQL sobre MySQL?
+### PostgreSQL
 
-| Característica        | PostgreSQL                          | MySQL                 |
-| --------------------- | ----------------------------------- | --------------------- |
-| **JSON/JSONB**        | ✅ Nativo y optimizado              | ⚠️ Básico desde 5.7   |
-| **Full-text Search**  | ✅ Avanzado y configurable          | ⚠️ Limitado           |
-| **Índices Avanzados** | ✅ GIN, GiST, BRIN, Hash            | ❌ Solo B-tree, Hash  |
-| **Arrays**            | ✅ Soporte nativo                   | ❌ No soporta         |
-| **Extensiones**       | ✅ PostGIS, pg_trgm, etc.           | ⚠️ Pocas opciones     |
-| **Compliance SQL**    | ✅ Estricto ANSI SQL                | ⚠️ Más permisivo      |
-| **Escalabilidad**     | ✅ Excelente para lectura/escritura | ⚠️ Mejor para lectura |
-| **Transacciones**     | ✅ ACID completo                    | ⚠️ Depende del engine |
+| Característica        | PostgreSQL                          |
+| --------------------- | ----------------------------------- |
+| **JSON/JSONB**        | ✅ Nativo y optimizado              |
+| **Full-text Search**  | ✅ Avanzado y configurable          |
+| **Índices Avanzados** | ✅ GIN, GiST, BRIN, Hash            |
+| **Arrays**            | ✅ Soporte nativo                   |
+| **Extensiones**       | ✅ PostGIS, pg_trgm, etc.           |
+| **Compliance SQL**    | ✅ Estricto ANSI SQL                |
+| **Escalabilidad**     | ✅ Excelente para lectura/escritura |
+| **Transacciones**     | ✅ ACID completo                    |
 
 **Para Vision4K es ideal porque**:
 
