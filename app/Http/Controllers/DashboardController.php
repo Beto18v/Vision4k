@@ -30,10 +30,10 @@ class DashboardController extends Controller
         // Obtener estadísticas en tiempo real
         $stats = [
             'total_wallpapers' => Wallpaper::count(),
-            'total_downloads' => Wallpaper::sum('downloads_count'),
+            'total_downloads' => Wallpaper::withTrashed()->sum('downloads_count'),
             'total_categories' => Category::where('is_active', true)->count(),
             'recent_uploads' => Wallpaper::whereDate('created_at', today())->count(),
-            'total_views' => Wallpaper::sum('views_count'),
+            'total_views' => Wallpaper::withTrashed()->sum('views_count'),
             'featured_wallpapers' => Wallpaper::where('is_featured', true)->count(),
             'weekly_downloads' => Download::where('created_at', '>=', now()->startOfWeek())->count(),
         ];
@@ -78,7 +78,7 @@ class DashboardController extends Controller
                     'name' => $category->name,
                     'slug' => $category->slug,
                     'wallpaper_count' => $category->wallpapers_count,
-                    'total_downloads' => $category->wallpapers()->sum('downloads_count'),
+                    'total_downloads' => $category->wallpapers()->withTrashed()->sum('downloads_count'),
                     'image_url' => $category->image_path
                         ? Storage::url($category->image_path)
                         : $this->getCategoryDefaultImage($category->slug),
@@ -193,13 +193,7 @@ class DashboardController extends Controller
 
     public function destroy(Wallpaper $wallpaper)
     {
-        // Eliminar archivos del storage
-        Storage::disk('public')->delete($wallpaper->file_path);
-        if ($wallpaper->thumbnail_path) {
-            Storage::disk('public')->delete($wallpaper->thumbnail_path);
-        }
-
-        // Eliminar registro
+        // Soft delete del registro (mantiene estadísticas históricas)
         $wallpaper->delete();
 
         return back()->with('success', 'Wallpaper eliminado exitosamente.');

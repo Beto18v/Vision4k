@@ -50,6 +50,7 @@ interface OverviewSectionProps {
 export default function OverviewSection({ categories = [], stats, analytics }: OverviewSectionProps) {
     const [showCreateCategory, setShowCreateCategory] = useState(false);
     const [currentCategories, setCurrentCategories] = useState(categories);
+
     // Usar datos reales o valores vacíos (no datos por defecto)
     const displayStats = stats || {
         total_wallpapers: 0,

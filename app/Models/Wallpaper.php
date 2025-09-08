@@ -13,10 +13,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Wallpaper extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'title',
@@ -33,6 +34,7 @@ class Wallpaper extends Model
         'is_active',
         'is_premium',
         'user_id',
+        'deleted_at',
     ];
 
     protected $casts = [

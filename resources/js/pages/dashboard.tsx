@@ -95,12 +95,25 @@ export default function Dashboard({ auth, wallpapers = [], categories = [], stat
     const [currentWallpapers, setCurrentWallpapers] = useState(wallpapers);
     const [favorites, setFavorites] = useState<Array<Favorite>>([]);
     const [loading, setLoading] = useState(false);
+    const [currentStats, setCurrentStats] = useState(stats);
 
     useEffect(() => {
         if (activeTab === 'favorites') {
             fetchFavorites();
         }
     }, [activeTab]);
+
+    useEffect(() => {
+        setCurrentWallpapers(wallpapers);
+    }, [wallpapers]);
+
+    useEffect(() => {
+        setCurrentStats(stats);
+    }, [stats]);
+
+    const refreshStats = () => {
+        router.reload({ only: ['stats'] });
+    };
 
     const handleDeleteWallpaper = (wallpaperId: number) => {
         if (confirm('¿Estás seguro de que quieres eliminar este wallpaper?')) {
@@ -188,22 +201,7 @@ export default function Dashboard({ auth, wallpapers = [], categories = [], stat
                     />
 
                     {/* Overview Tab with Analytics */}
-                    {activeTab === 'overview' && (
-                        <OverviewSection
-                            categories={categories || []}
-                            stats={
-                                stats || {
-                                    total_wallpapers: 0,
-                                    total_downloads: 0,
-                                    total_categories: 0,
-                                    recent_uploads: 0,
-                                    total_views: 0,
-                                    featured_wallpapers: 0,
-                                }
-                            }
-                            analytics={analytics}
-                        />
-                    )}
+                    {activeTab === 'overview' && <OverviewSection categories={categories || []} stats={currentStats} analytics={analytics} />}
 
                     {/* Upload Tab */}
                     {activeTab === 'upload' && (
@@ -227,7 +225,13 @@ export default function Dashboard({ auth, wallpapers = [], categories = [], stat
 
                     {/* Favorites Tab */}
                     {activeTab === 'favorites' && (
-                        <FavoritesSection auth={auth} favorites={favorites} loading={loading} onToggleFavorite={handleToggleFavorite} />
+                        <FavoritesSection
+                            auth={auth}
+                            favorites={favorites}
+                            loading={loading}
+                            onToggleFavorite={handleToggleFavorite}
+                            onRefreshStats={refreshStats}
+                        />
                     )}
 
                     {/* Wallpapers Management */}

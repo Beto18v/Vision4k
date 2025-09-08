@@ -30,10 +30,12 @@ interface FavoritesSectionProps {
     }>;
     loading: boolean;
     onToggleFavorite: (wallpaperId: number) => void;
+    onRefreshStats: () => void;
 }
 
-export default function FavoritesSection({ favorites, loading, onToggleFavorite }: FavoritesSectionProps) {
+export default function FavoritesSection({ favorites, loading, onToggleFavorite, onRefreshStats }: FavoritesSectionProps) {
     const [removedItems, setRemovedItems] = useState<typeof favorites>([]);
+    const [updatedWallpapers, setUpdatedWallpapers] = useState<typeof favorites>([]);
 
     const handleRemoveFavorite = (wallpaper: (typeof favorites)[0]) => {
         setRemovedItems((prev) => [...prev, wallpaper]);
@@ -43,7 +45,44 @@ export default function FavoritesSection({ favorites, loading, onToggleFavorite 
         }, 300);
     };
 
+    const handleDownload = async (wallpaper: (typeof favorites)[0]) => {
+        try {
+            // Optimistically update the download count
+            setUpdatedWallpapers((prev) => {
+                const existing = prev.find((w) => w.id === wallpaper.id);
+                if (existing) {
+                    return prev.map((w) => (w.id === wallpaper.id ? { ...w, downloads_count: w.downloads_count + 1 } : w));
+                } else {
+                    return [...prev, { ...wallpaper, downloads_count: wallpaper.downloads_count + 1 }];
+                }
+            });
+
+            // Create download link and trigger download
+            const link = document.createElement('a');
+            link.href = `/wallpapers/${wallpaper.id}/download`;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Refresh stats after successful download
+            setTimeout(() => {
+                onRefreshStats();
+            }, 1000); // Small delay to ensure download is processed on server
+        } catch (error) {
+            console.error('Error downloading:', error);
+            // Revert optimistic update on error
+            setUpdatedWallpapers((prev) => prev.filter((w) => w.id !== wallpaper.id));
+        }
+    };
+
     const allWallpapers = [...favorites, ...removedItems].filter((w, index, arr) => arr.findIndex((w2) => w2.id === w.id) === index);
+
+    // Merge with updated wallpapers to show latest download counts
+    const displayWallpapers = allWallpapers.map((wallpaper) => {
+        const updated = updatedWallpapers.find((w) => w.id === wallpaper.id);
+        return updated || wallpaper;
+    });
 
     return (
         <div className="space-y-6">
@@ -60,7 +99,7 @@ export default function FavoritesSection({ favorites, loading, onToggleFavorite 
                 </div>
             ) : (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {allWallpapers.map((wallpaper) => {
+                    {displayWallpapers.map((wallpaper) => {
                         const isRemoving = removedItems.some((r) => r.id === wallpaper.id);
                         return (
                             <div
@@ -85,7 +124,10 @@ export default function FavoritesSection({ favorites, loading, onToggleFavorite 
                                                 <Eye size={20} />
                                                 <span>{wallpaper.views_count}</span>
                                             </span>
-                                            <span className="flex items-center space-x-1">
+                                            <span
+                                                className="flex cursor-pointer items-center space-x-1 hover:text-white"
+                                                onClick={() => handleDownload(wallpaper)}
+                                            >
                                                 <Download size={20} />
                                                 <span>{wallpaper.downloads_count}</span>
                                             </span>
