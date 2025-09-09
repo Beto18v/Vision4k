@@ -44,7 +44,7 @@ class AdminUserSeeder extends Seeder
 
         if ($adminRole) {
             $admin = \App\Models\User::firstOrCreate(
-                ['email' => 'admin@vision4k.com'],
+                ['email' => 'wppvision4k@gmail.com'],
                 [
                     'name' => 'Administrador',
                     'password' => bcrypt('admin123'),

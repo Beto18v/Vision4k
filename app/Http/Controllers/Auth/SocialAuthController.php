@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
 
 class SocialAuthController extends Controller
@@ -25,17 +26,29 @@ class SocialAuthController extends Controller
     public function handleGoogleCallback()
     {
         try {
+            Log::info('Google OAuth callback started');
+
             $googleUser = Socialite::driver('google')->user();
+            Log::info('Google user retrieved', [
+                'email' => $googleUser->getEmail(),
+                'name' => $googleUser->getName(),
+                'id' => $googleUser->getId()
+            ]);
 
             $user = User::where('email', $googleUser->getEmail())->first();
+            Log::info('User lookup result', ['user_exists' => $user ? 'yes' : 'no']);
 
             if ($user) {
                 // User exists, update Google ID if not set
                 if (!$user->google_id) {
                     $user->update(['google_id' => $googleUser->getId()]);
+                    Log::info('Updated existing user with Google ID');
+                } else {
+                    Log::info('User already has Google ID');
                 }
             } else {
                 // Create new user
+                Log::info('Creating new user');
                 $user = User::create([
                     'name' => $googleUser->getName(),
                     'email' => $googleUser->getEmail(),
@@ -43,13 +56,18 @@ class SocialAuthController extends Controller
                     'password' => Hash::make(uniqid()), // Random password since OAuth
                     'email_verified_at' => now(),
                 ]);
+                Log::info('New user created', ['user_id' => $user->id]);
             }
 
             Auth::login($user);
+            Log::info('User logged in successfully', ['user_id' => $user->id]);
 
             return redirect()->intended(route('dashboard'));
         } catch (\Exception $e) {
-            return redirect()->route('login')->withErrors(['social' => 'Error al iniciar sesión con Google.']);
+            Log::error('Google OAuth Error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->route('login')->withErrors(['social' => 'Error al iniciar sesión con Google: ' . $e->getMessage()]);
         }
     }
 

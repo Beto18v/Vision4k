@@ -22,3 +22,8 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Docker
+docker-compose.override.yml
+docker/ssl/cacert.pem.backup
+*.log
