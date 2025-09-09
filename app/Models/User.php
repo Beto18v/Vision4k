@@ -37,6 +37,8 @@ class User extends Authenticatable
         'download_limit',
         'downloads_today',
         'last_download_reset',
+        'google_id',
+        'facebook_id',
     ];
 
     /**
